@@ -9,14 +9,14 @@ in this course, this assignment is relatively more open ended and as a result yo
 implementation details as long as you adhere to the protocol specified in section 2.1.
 
 # Updates
-• Any data packet correspondence after the initial handshake should always have ACK flag set and the
+* Any data packet correspondence after the initial handshake should always have ACK flag set and the
 correct ACK number.
-• Please make sure your Makefile places compiled *.class files under src as well.
+* Please make sure your Makefile places compiled *.class files under src as well.
 Learning Outcomes
 After completing this programming assignment, students should be able to:
-• Write code that builds reliable data transfer for application running atop unreliable UDP sockets
-• Understand and implement retransmission timeouts
-• Understand and implement one’s complement checksum for data integrity
+* Write code that builds reliable data transfer for application running atop unreliable UDP sockets
+* Understand and implement retransmission timeouts
+* Understand and implement one’s complement checksum for data integrity
 
 # Background
 ## 1.1 Introduction
