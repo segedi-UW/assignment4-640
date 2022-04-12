@@ -1,13 +1,14 @@
-
-CS 640 Introduction to Computer Networks Spring’22
+# CS 640 Introduction to Computer Networks Spring’22
 Assignment 4
 Due at 11:59pm on: Apr 29
-Preamble
+
+# Preamble
 This handout starts out by giving a brief introduction to TCP in Section 1 before moving onto the problem
 statement. So, don’t get scared if it seems very long at first. Also, note that unlike the previous assignments
 in this course, this assignment is relatively more open ended and as a result you have more freedom in your
 implementation details as long as you adhere to the protocol specified in section 2.1.
-Updates
+
+# Updates
 • Any data packet correspondence after the initial handshake should always have ACK flag set and the
 correct ACK number.
 • Please make sure your Makefile places compiled *.class files under src as well.
@@ -16,8 +17,9 @@ After completing this programming assignment, students should be able to:
 • Write code that builds reliable data transfer for application running atop unreliable UDP sockets
 • Understand and implement retransmission timeouts
 • Understand and implement one’s complement checksum for data integrity
-1 Background
-1.1 Introduction
+
+# Background
+## 1.1 Introduction
 The Transmission Control Protocol (TCP) standard is defined in the Request For Comment (RFC) standards
 document number 793 by the Internet Engineering Task Force (IETF). The original specification written in
 1981 was based on earlier research and experimentation in the original ARPANET. The design of TCP was
@@ -30,39 +32,43 @@ to provide minimal functionality on a hop-by-hop basis and maximal control betwe
 nicating systems. The end-to-end argument helped determine the design of various components of TCP’s
 reliability, flow control, and congestion control algorithms. The following are a few important characteristics
 of TCP.
-1.2 Byte Stream Delivery
+
+## 1.2 Byte Stream Delivery
 TCP interfaces between the application layer above and the network layer below. When an application sends
 data to TCP, it does so in 8-bit byte streams. It is then up to the sending TCP to segment or delineate
 the byte stream in order to transmit data in manageable pieces to the receiver. It is this lack of record
 boundaries which give it the name byte stream delivery service.
-1
-1.3 Connection-oriented Approach
+
+## 1.3 Connection-oriented Approach
 Before two communicating TCP endpoints can exchange data, they must first agree upon the willingness to
 communicate. Analogous to a telephone call, a connection must first be made before two parties exchange
 information.
-1.4 Reliability
+
+## 1.4 Reliability
 A number of mechanisms help provide the reliability TCP guarantees. Each of these is described briefly
 below.
-• Checksums: All TCP segments carry a checksum, which is used by the receiver to detect errors with
+* Checksums: All TCP segments carry a checksum, which is used by the receiver to detect errors with
 either the TCP header or data.
-• Duplicate data detection: It is possible for packets to be duplicated in packet switched network;
+* Duplicate data detection: It is possible for packets to be duplicated in packet switched network;
 therefore TCP keeps track of bytes received in order to discard duplicate copies of data that has already
 been received.
-• Retransmissions: In order to guarantee delivery of data, TCP must implement retransmission
+* Retransmissions: In order to guarantee delivery of data, TCP must implement retransmission
 schemes for data that may be lost or damaged. The use of positive acknowledgements by the re-
 ceiver to the sender confirms successful reception of data. The lack of positive acknowledgements,
 coupled with a timeout period (see timers below) calls for a retransmission.
-• Sequence numbers: In packet switched networks, it is possible for packets to be delivered out of
+* Sequence numbers: In packet switched networks, it is possible for packets to be delivered out of
 order. It is TCP’s job to properly sequence segments it receives so it can deliver the byte stream data
 to an application in order.
-• Timers: TCP maintains various static and dynamic timers on data sent. The sending TCP waits for
+* Timers: TCP maintains various static and dynamic timers on data sent. The sending TCP waits for
 the receiver to reply with an acknowledgement within a bounded length of time. If the timer expires
 before receiving an acknowledgement, the sender can retransmit the segment.
-1.5 Connection Establishment and Termination
+
+## 1.5 Connection Establishment and Termination
 TCP provides a connection-oriented service over packet switched networks. Connection-oriented implies that
 there is a virtual connection between two endpoints. There are three phases in any virtual connection. These
 are the connection establishment, data transfer and connection termination phases.
-1.6 3-way handshake
+
+## 1.6 3-way handshake
 In order for two hosts to communicate using TCP they must first establish a connection by exchanging
 messages in what is known as the three-way handshake. The diagram below depicts the process of the
 three-way handshake. From Figure 1, it can be seen that there are three TCP segments exchanged between
@@ -73,12 +79,13 @@ At some moment later in time, Host B receives this SYN segment, processes it and
 segment of its own. The response from Host B contains the SYN control bit set and its own ISN represented
 as variable y. Host B also sets the ACK control bit to indicate the next expected byte from Host A should
 contain data starting with sequence number x + 1.
+
 When Host A receives Host B’s ISN and ACK, it finishes the connection establishment phase by sending a
 final acknowledgement segment to Host B. In this case, Host A sets the ACK control bit and indicates the
 next expected byte from Host B by placing acknowledgement number y + 1 in the acknowledgement field.
 In addition to the information shown in the diagram above, an exchange of source and destination ports to
 use for this connection are also included in each senders’ segments.
-2
+
 Host A Host BSYN seq = x
 SYN seq = y, ACK x + 1
 ACK y + 1
@@ -86,11 +93,13 @@ Time
 Established
 Data Exchange
 Figure 1: 3-way handshake on TCP connection initiation
-1.7 Data Transfer
+
+## 1.7 Data Transfer
 Once ISNs have been exchanged, communicating applications can transmit data between each other. Most of
 the discussion surrounding data transfer requires us to look at flow control and congestion control techniques
 which we discuss later in this document. A few key ideas will be briefly made here, while leaving the technical
 details aside.
+
 A simple TCP implementation will place segments into the network for a receiver as long as there is data
 to send and as long as the sender does not exceed the window advertised by the receiver. As the receiver
 accepts and processes TCP segments, it sends back positive cumulative acknowledgements, indicating the
@@ -102,7 +111,8 @@ size that is greater than zero before resuming.
 Timers are used to avoid deadlock and unresponsive connections. Delayed transmissions are used to make
 more eﬀicient use of network bandwidth by sending larger “chunks” of data at once rather than in smaller
 individual pieces.
-1.8 Connection Termination
+
+## 1.8 Connection Termination
 In order for a connection to be terminated, four segments are required to completely close a connection.
 Four segments are necessary due to the fact that TCP is a full-duplex protocol, meaning that each end must
 shut down independently. The connection termination phase is shown below.
@@ -121,7 +131,8 @@ ACK y + 1
 Time
 FIN seq = y
 Figure 2: 3-way termination of a TCP connection
-1.9 Sliding Window and Flow Control
+
+## 1.9 Sliding Window and Flow Control
 Flow control is a technique whose primary purpose is to properly match the transmission rate of sender to
 that of the receiver and the network. It is important for the transmission to be at a high enough rate to
 ensure good performance, but also to protect against overwhelming the network or receiving host.
@@ -145,7 +156,8 @@ TCP congestion control and Internet traﬀic management issues in general is an 
 experimentation. This final section is a very brief summary of the standard congestion control algorithms
 widely used in TCP implementations today.
 4
-1.10.1 Slow Start
+
+## 1.10.1 Slow Start
 Slow Start, a requirement for TCP software implementations is a mechanism used by the sender to control
 the transmission rate, otherwise known as sender-based flow control. This is accomplished through the return
 rate of acknowledgements from the receiver. In other words, the rate of acknowledgements from the receiver
@@ -161,7 +173,8 @@ to two segments. After successful transmission of these two segments and acknowl
 window is increased to four segments. Then eight segments, then sixteen segments and so on, doubling from
 there on out up to the maximum window size advertised by the receiver or until congestion finally does
 occur.
-1.10.2 Congestion Avoidance
+
+## 1.10.2 Congestion Avoidance
 During the initial data transfer phase of a TCP connection the Slow Start algorithm is used. However, there
 may be a point during Slow Start that the network is forced to drop one or more packets due to overload
 or congestion. If this happens, Congestion Avoidance is used to slow the transmission rate. However, Slow
@@ -180,7 +193,8 @@ earlier as the new transmission window. After this halfway point, the congestion
 one segment for all segments in the transmission window that are acknowledged. This mechanism will force
 the sender to more slowly grow its transmission rate, as it will approach the point where congestion had
 previously been detected.
-1.11 Fast Retransmit
+
+## 1.11 Fast Retransmit
 When a duplicate ACK is received, the sender does not know if it is because a TCP segment was lost or
 simply that a segment was delayed and received out of order at the receiver. If the receiver can reorder
 segments, it should not be long before the receiver sends the latest expected acknowledgement. Typically
@@ -192,7 +206,8 @@ When three or more duplicate ACKs are received, the sender does not even wait fo
 to expire before retransmitting the segment (as indicated by the position of the duplicate ACK in the byte
 stream). This process is called the Fast Retransmit algorithm.
 5
-2 Problem Statement
+
+# 2 Problem Statement
 For this assignment, you have to implement a Transmission Control Protocol which should incorporate only
 the following features on top of the unreliable UDP sockets:
 • Reliability (with proper re-transmissions in the event of packet losses / corruption)
@@ -201,9 +216,11 @@ the following features on top of the unreliable UDP sockets:
 • Optimizations (fast retransmit on 3 or more duplicate ACKs)
 Then you are required to transfer a file from the client to the server using the new reliable transport protocol
 you just developed.
-2.1 Protocol Specification
+
+## 2.1 Protocol Specification
 The various components of the protocol are explained step by step. Please strictly adhere to the specifications.
-2.1.1 Message Format
+
+## 2.1.1 Message Format
 All data are sent using UDP. You have to communicate all the transport layer information in the data
 portion of a UDP packet. To support reliability, hosts will implement a variant of the Go-Back-N protocol.
 The sender will tag each outgoing message with an increasing sequence number. The receiver will use the
@@ -222,23 +239,25 @@ Timestamp
 Length S F A
 All Zeros Checksum
 Data
-• Byte Sequence Number is incremented according to the bytes sent. It indicates the position of the
+* Byte Sequence Number is incremented according to the bytes sent. It indicates the position of the
 first byte of the data in this segment.
-• Acknowledgment indicates the next byte expected in the reverse direction
-• Timestamp is derived from the System.nanoTime() function and is the time of data transmission (in
+* Acknowledgment indicates the next byte expected in the reverse direction
+* Timestamp is derived from the System.nanoTime() function and is the time of data transmission (in
 nanoSeconds) which is 64 bits (or 8 bytes) long in size.
 6
-• Length is the length of the data portion (in bytes) and please pay attention that the least three
+* Length is the length of the data portion (in bytes) and please pay attention that the least three
 significant bits are used by flags. That means valid number of bits for the length field are only 29 bits
 (You will need to do bit manipulation to access and set these fields).
-• Three flags: S for SYN, A for ACK, and F for FIN.
-• Checksum is the one’s complement checksum computed over the entire packet with the checksum
+* Three flags: S for SYN, A for ACK, and F for FIN.
+* Checksum is the one’s complement checksum computed over the entire packet with the checksum
 assumed zero in the input. See appendix A on how to calculate one’s complement checksum.
-2.1.2 Maximum Number of Retransmissions
+
+## 2.1.2 Maximum Number of Retransmissions
 If unacknowledged messages remain in a host’s send buffer and no response from the destination has been
 received after multiple retransmission attempts, the sending host will stop trying to send the messages and
 report an error. This maximum is set to 16 by default.
-2.1.3 Maximum Transmission Unit
+
+## 2.1.3 Maximum Transmission Unit
 Maximum Transmission Unit (MTU) is the maximum size of IP packet you may transmit. This value is
 required to derive the maximum size of payload in your protocol. So in order to transfer a huge file, it needs
 to be divided into smaller chunks the maximum size of each chunk being (MTU - size of IP header (usually
@@ -248,17 +267,18 @@ and server during startup. Normal ethernet links use 1500B MTU - actual MTU used
 On the safe size, don’t specify anything larger than 1500 in MTU unless your test environment can support
 Ethernet Jumbo Frame. If you do not understand what this means, your network is unlikely to support an
 Ethernet frame larger than 1518 bytes.
-2.1.4 Connection State and Peer Actions
+
+## 2.1.4 Connection State and Peer Actions
 Suppose host A wants to send a message to host B. Assume, for now, that A has never sent a message to B
 (as will be clear, it does not matter if A has rebooted or has sent a message a long time ago, etc.).
-• Data Send Actions: A will send a data segment as governed by the size of the sliding congestion
+* Data Send Actions: A will send a data segment as governed by the size of the sliding congestion
 window. In this assignment, the congestion window is a configured parameter. A will include a
 monotonically increasing timestamp (See Section 2.2 on how to compute this timestamp) on the packet.
 If A thinks this is a new connection (because it has never communicated with B before, or because it
 has somehow lost the connection state to B), it will set the sequence number to 0. For each subsequent
 message, A will include a new timestamp on the packet and increment the sequence number by the
 number of bytes sent.
-• Receiver Actions
+* Receiver Actions
 Connection start and data transfer: If this is the first time B is communicating with A and has
 just received a segment with sequence number equal to zero, it creates a new connection state for A. For
 each segment received, B will send an acknowledgment to A. The acknowledgment packet has sequence
@@ -274,7 +294,8 @@ ACKed, the packet will be re-re-transmitted. Apart from timeout based retransmis
 also uses three duplicate acknowledgments for the same sequence number as an indicator of loss and
 retransmits the corresponding lost segment. This is the “fast retransmit” approach.
 7
-2.2 Timeout Computation
+
+## 2.2 Timeout Computation
 The sender places the current time in the packet timestamp field of the message header. When a packet is
 acknowledged by the receiving client it will copy the packet timestamp into the acknowledged timestamp
 field. When the sender receives the acknowledgment it can subtract the acknowledgment timestamp from
@@ -298,25 +319,27 @@ The value of a is set to 0.875 and b is 0.75.
 Computing the sender timestamp: In the 64-bit timestamp field, the sender includes a monotonically in-
 creasing timestamp with granularity of one nanosecond. This can be obtained from the System.nanoTime()
 function.
-2.3 Host Commands/Output Format
+
+## 2.3 Host Commands/Output Format
 You will implement a java executable called TCPend. Command line arguments will indicate which host is
 the initiator of a TCP transfer. The sender TCPend must support the following options at startup:
 java TCPend -p <port> -s <remote IP> -a <remote port> –f <file name> -m <mtu> -c <sws>
-• port: port number at which the client will run
-• remote IP: the IP address of the remote peer (i.e. receiver). With the -s flag your program should
+* port: port number at which the client will run
+* remote IP: the IP address of the remote peer (i.e. receiver). With the -s flag your program should
 operate in sending mode.
-• remote port: the port at which the remote receiver is running
-• file name: the file to be sent
-• mtu: maximum transmission unit in bytes
-• sws: sliding window size in number of segments
+* remote port: the port at which the remote receiver is running
+* file name: the file to be sent
+* mtu: maximum transmission unit in bytes
+* sws: sliding window size in number of segments
 The remote receiver uses the following set of arguments:
 java TCPend -p <port> -m <mtu> -c <sws> -f <file name>
-• port: port number at which the receiver will listen at
-• file name: the path where the incoming file should be written
-• mtu: maximum transmission unit in bytes
-• sws: sliding window size in number of segments
+* port: port number at which the receiver will listen at
+* file name: the path where the incoming file should be written
+* mtu: maximum transmission unit in bytes
+* sws: sliding window size in number of segments
 Host Output
 Each host should output the information about each segment that it sends and receives in the following
+
 format:
 8
 <snd/rcv> <time> <flag-list> <seq-number> <number of bytes> <ack number>
