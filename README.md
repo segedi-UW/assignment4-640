@@ -12,7 +12,8 @@ implementation details as long as you adhere to the protocol specified in sectio
 * Any data packet correspondence after the initial handshake should always have ACK flag set and the
 correct ACK number.
 * Please make sure your Makefile places compiled *.class files under src as well.
-Learning Outcomes
+
+# Learning Outcomes
 After completing this programming assignment, students should be able to:
 * Write code that builds reliable data transfer for application running atop unreliable UDP sockets
 * Understand and implement retransmission timeouts
