@@ -336,7 +336,7 @@ operate in sending mode.
 * mtu: maximum transmission unit in bytes
 * sws: sliding window size in number of segments
 The remote receiver uses the following set of arguments:
-java TCPend -p <port> -m <mtu> -c <sws> -f <file name>
+`java TCPend -p <port> -m <mtu> -c <sws> -f <file name>`
 * port: port number at which the receiver will listen at
 * file name: the path where the incoming file should be written
 * mtu: maximum transmission unit in bytes
@@ -345,8 +345,7 @@ Host Output
 Each host should output the information about each segment that it sends and receives in the following
 
 format:
-8
-<snd/rcv> <time> <flag-list> <seq-number> <number of bytes> <ack number>
+`<snd/rcv> <time> <flag-list> <seq-number> <number of bytes> <ack number>`
 where flag list includes S for SYN, A for ACK, F for FIN and D for data. The following are valid output
 lines for a connection initiator that sends 112 bytes of data:
 snd 34.335 S - - - 0 0 0
