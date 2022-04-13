@@ -211,10 +211,10 @@ stream). This process is called the Fast Retransmit algorithm.
 # 2 Problem Statement
 For this assignment, you have to implement a Transmission Control Protocol which should incorporate only
 the following features on top of the unreliable UDP sockets:
-• Reliability (with proper re-transmissions in the event of packet losses / corruption)
-• Data Integrity (with checksums)
-• Connection Management (SYN and FIN)
-• Optimizations (fast retransmit on 3 or more duplicate ACKs)
+* Reliability (with proper re-transmissions in the event of packet losses / corruption)
+* Data Integrity (with checksums)
+* Connection Management (SYN and FIN)
+* Optimizations (fast retransmit on 3 or more duplicate ACKs)
 Then you are required to transfer a file from the client to the server using the new reliable transport protocol
 you just developed.
 
@@ -232,6 +232,7 @@ sender will maintain an acknowledgment timeout based on the round trip time of t
 hosts. If a duplicate acknowledgment is received or if the acknowledgment timeout expires the sender will
 resend the unacknowledged segment destined for the receiver. A one’s complement checksum (The detailed
 explanation is in later section) on the data part is used to enforce message integrity. See figure 4 for details.
+
 Figure 4: Binary packet format
 Byte Sequence Number
 0 16 313029
@@ -240,12 +241,13 @@ Timestamp
 Length S F A
 All Zeros Checksum
 Data
+
 * Byte Sequence Number is incremented according to the bytes sent. It indicates the position of the
 first byte of the data in this segment.
 * Acknowledgment indicates the next byte expected in the reverse direction
 * Timestamp is derived from the System.nanoTime() function and is the time of data transmission (in
 nanoSeconds) which is 64 bits (or 8 bytes) long in size.
-6
+
 * Length is the length of the data portion (in bytes) and please pay attention that the least three
 significant bits are used by flags. That means valid number of bits for the length field are only 29 bits
 (You will need to do bit manipulation to access and set these fields).
@@ -265,7 +267,8 @@ to be divided into smaller chunks the maximum size of each chunk being (MTU - si
 20B) - size of UDP header (8B) - your header (24B)) It is passed as a command line argument to the client
 and server during startup. Normal ethernet links use 1500B MTU - actual MTU used can be inspected with
 ‘ip link‘ command.
-On the safe size, don’t specify anything larger than 1500 in MTU unless your test environment can support
+
+On the safe size, **don’t specify anything larger than 1500** in MTU unless your test environment can support
 Ethernet Jumbo Frame. If you do not understand what this means, your network is unlikely to support an
 Ethernet frame larger than 1518 bytes.
 
@@ -324,7 +327,7 @@ function.
 ## 2.3 Host Commands/Output Format
 You will implement a java executable called TCPend. Command line arguments will indicate which host is
 the initiator of a TCP transfer. The sender TCPend must support the following options at startup:
-java TCPend -p <port> -s <remote IP> -a <remote port> –f <file name> -m <mtu> -c <sws>
+`java TCPend -p <port> -s <remote IP> -a <remote port> –f <file name> -m <mtu> -c <sws>`
 * port: port number at which the client will run
 * remote IP: the IP address of the remote peer (i.e. receiver). With the -s flag your program should
 operate in sending mode.
