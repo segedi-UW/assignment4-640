@@ -32,11 +32,17 @@ public class TCPend {
 
     }
 
+    /**
+     *  The Transport class handles the bulk of the TCP general
+     *  processing. Specifics are implemented via the handlePacket(DatagramPacket)
+     *  method of the implementing class.
+     */
     private static abstract class Transport {
         final protected int lp, rp; // local port, remote port
         final protected String filename;
         final protected int mtu;   // max transmission unit
         final protected int sws;    // sliding window size
+        // TODO create packet buffer
 
         protected Transport(int lp, int rp, String filename, int mtu, int sws) {
             this.lp = lp;
@@ -47,13 +53,27 @@ public class TCPend {
         }
 
         public boolean send() {
-            // TODO Loop while we have bytes to send that have not been acked
+            // TODO Loop while we have bytes to send / rcv that have not been acked
             // each time loading the packet using the handlePacket method
             // that is implemented in the Sender and Receiver class
-            return false;
+            // 
+            // We need to print the following stats, which should be done here:
+            // * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
+
+            DatagramPacket p = getInitPacket();
+            while (true) {
+                // work loop
+                if (p != null) handlePacket(p);
+                return false; // FIXME tmp break;
+            }
+
+            //return false;
         }
 
-        public abstract int handlePacket(DatagramPacket p);
+        // TODO may return something other than int if needed
+        public abstract DatagramPacket handlePacket(DatagramPacket p);
+        public abstract DatagramPacket getInitPacket();
+
     }
 
     private static class Sender extends Transport {
@@ -65,8 +85,14 @@ public class TCPend {
         }
 
         @Override
-        public int handlePacket(DatagramPacket p) {
-            return -1;
+        public DatagramPacket handlePacket(DatagramPacket p) {
+            return null; // FIXME should not be null
+        }
+
+        @Override
+        public DatagramPacket getInitPacket() {
+            // FIXME need to have specific init packet
+            return new DatagramPacket(new byte[0], 0);
         }
     }
 
@@ -75,11 +101,24 @@ public class TCPend {
             super(lp, rp, filename, mtu, sws);
         }
 
-        public int handlePacket(DatagramPacket p) {
-            return -1;
+        @Override
+        public DatagramPacket handlePacket(DatagramPacket p) {
+            return null; // should be null as we do not init as receiver
+        }
+
+        @Override
+        public DatagramPacket getInitPacket() {
+            // FIXME need to have specific init packet
+            return new DatagramPacket(new byte[0], 0);
         }
     }
 
+    /**
+     * This class creates the coresponding Transport with respect to the arguments
+     * passed into it via the add(String, String) method.
+     *
+     * @see add(String, String)
+     */
     private static class TransportBuilder {
         private static int parseIntFailure = -1;
 
@@ -98,6 +137,10 @@ public class TCPend {
             return rip != null;
         }
 
+        /**
+         *  @param opt flag char
+         *  @param arg passed arg for the flag
+         */
         public boolean add(String opt, String arg) {
             switch (opt) {
                 case "p":
@@ -129,7 +172,7 @@ public class TCPend {
             return true;
         }
 
-        int tryParseInt(String str) {
+        private int tryParseInt(String str) {
             try {
                 return Integer.parseInt(str);
             } catch (NumberFormatException e) {
@@ -137,6 +180,5 @@ public class TCPend {
                 return parseIntFailure;
             }
         }
-
     }
 }
