@@ -1,11 +1,15 @@
 cargs=
-rargs=-ea
+rsargs=-p 4700 -s localhost -a 5000 -f test.txt -m 1500 -c 5
+rrargs=-p 5000 -m 1500 -c 5 -f intest.txt
 
 TCPend.class : TCPend.java
 	javac TCPend.java $(cargs)
 
-run : TCPend.class
-	java TCPend $(rargs)
+snd : TCPend.class
+	java -ea TCPend $(rsargs)
+
+rcv : TCPend.class
+	java -ea TCPend $(rrargs)
 
 .PHONY : clean
 clean :
