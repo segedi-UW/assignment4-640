@@ -2,6 +2,10 @@
 Assignment 4
 Due at 11:59pm on: Apr 29
 
+## Res Links
+[DatagramPacket](https://docs.oracle.com/javase/7/docs/api/java/net/DatagramPacket.html)
+
+
 # Preamble
 This handout starts out by giving a brief introduction to TCP in Section 1 before moving onto the problem
 statement. So, don’t get scared if it seems very long at first. Also, note that unlike the previous assignments
