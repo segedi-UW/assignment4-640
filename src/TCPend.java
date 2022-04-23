@@ -1,11 +1,13 @@
 import java.net.DatagramPacket;
+import java.util.List;
+import java.util.LinkedList;
 
 public class TCPend {
 
 
     private static String getExpects() {
-        final String sexp = "java TCPend -p <port> -s <remote ip> -a <remote port> -f <filename> -m <mtu> -c <sws>\n";
-        final String rexp = "java TCPend -p <port> -m <mtu> -c <sws> -f <filename>";
+        final String sexp = "Send: java TCPend -p <port> -s <remote ip> -a <remote port> -f <filename> -m <mtu> -c <sws>\n";
+        final String rexp = "Receive: java TCPend -p <port> -m <mtu> -c <sws> -f <filename>";
         return "Expects arguments:\n" + sexp + rexp;
     }
 
@@ -18,7 +20,6 @@ public class TCPend {
         for (String arg : args) {
             if (arg.startsWith("-")) {
                 popt = arg.substring(1);
-                continue;
             } else if (popt != null && !tbuilder.add(popt, arg)) {
                 System.err.println("Error building Transport.");
                 return;
@@ -42,7 +43,7 @@ public class TCPend {
         final protected String filename;
         final protected int mtu;   // max transmission unit
         final protected int sws;    // sliding window size
-        // TODO create packet buffer
+        final protected List buffer;
 
         protected Transport(int lp, int rp, String filename, int mtu, int sws) {
             this.lp = lp;
@@ -50,6 +51,7 @@ public class TCPend {
             this.filename = filename;
             this.mtu = mtu;
             this.sws = sws;
+            buffer = new LinkedList();
         }
 
         public boolean send() {
