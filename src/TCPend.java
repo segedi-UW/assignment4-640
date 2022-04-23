@@ -70,9 +70,8 @@ public class TCPend {
             //return false;
         }
 
-        // TODO may return something other than int if needed
-        public abstract DatagramPacket handlePacket(TCPPacket p);
-        public abstract DatagramPacket getInitPacket();
+        public abstract TCPpacket handlePacket(TCPPacket p);
+        public abstract TCPpacket getInitPacket();
 
     }
 
@@ -85,14 +84,14 @@ public class TCPend {
         }
 
         @Override
-        public DatagramPacket handlePacket(TCPPacket p) {
+        public TCPpacket handlePacket(TCPPacket p) {
             return null; // FIXME should not be null
         }
 
         @Override
-        public DatagramPacket getInitPacket() {
+        public TCPpacket getInitPacket() {
             // FIXME need to have specific init packet
-            return new DatagramPacket(new byte[0], 0);
+            return new TCPpacket();
         }
     }
 
@@ -102,14 +101,14 @@ public class TCPend {
         }
 
         @Override
-        public DatagramPacket handlePacket(TCPPacket p) {
+        public TCPpacket handlePacket(TCPPacket p) {
             return null; // should be null as we do not init as receiver
         }
 
         @Override
-        public DatagramPacket getInitPacket() {
+        public TCPpacket getInitPacket() {
             // FIXME need to have specific init packet
-            return new DatagramPacket(new byte[0], 0);
+            return new TCPpacket();
         }
     }
 
