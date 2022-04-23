@@ -25,7 +25,7 @@ public class TCPend {
         }
 
         Transport t = tbuilder.build();
-        if (!t.send()) {
+        if (!t.transfer()) {
             System.err.println("Error sending all bytes");
         }
 

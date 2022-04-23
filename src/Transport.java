@@ -13,7 +13,7 @@ public abstract class Transport {
     final protected int sws;    // sliding window size
     final protected List<Byte> buffer;
 
-    private long currentAck;
+    protected long currentAck;
 
     protected Transport(int lp, int rp, String filename, int mtu, int sws) {
         this.lp = lp;
@@ -24,7 +24,7 @@ public abstract class Transport {
         buffer = new ArrayList<>(); 
     }
 
-    public boolean send() {
+    public boolean transfer() {
         // TODO Loop while we have bytes to send / rcv that have not been acked
         // each time loading the packet using the handlePacket method
         // that is implemented in the Sender and Receiver class
@@ -40,10 +40,6 @@ public abstract class Transport {
         }
 
         //return false;
-    }
-
-    protected long getCurrentAck() {
-        return currentAck;
     }
 
     public abstract TCPpacket handlePacket(TCPpacket p);
