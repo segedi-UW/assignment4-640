@@ -32,7 +32,7 @@ public abstract class Transport {
         // We need to print the following stats, which should be done here:
         // * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
-        TCPpacket p = new TCPpacket();
+        TCPpacket p = getInitPacket();
         while (true) {
             // work loop
             if (p != null) handlePacket(p);
