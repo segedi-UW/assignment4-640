@@ -79,6 +79,8 @@ public class TCPend {
 
     private static class Sender extends Transport {
         final private String rip; // remote ip
+        // LinkedList buffer (protected)
+        // constructor fields (protected)
 
         public Sender(int lp, int rp, String rip, String filename, int mtu, int sws) {
             super(lp, rp, filename, mtu, sws);
@@ -87,7 +89,7 @@ public class TCPend {
 
         @Override
         public TCPpacket handlePacket(TCPpacket p) {
-            return null; // FIXME should not be null
+            return new TCPpacket(); // FIXME, take into account receieved packet p
         }
 
         @Override
@@ -98,19 +100,21 @@ public class TCPend {
     }
 
     private static class Receiver extends Transport {
+        // LinkedList buffer (protected)
+        // constructor fields (protected)
+        
         public Receiver(int lp, int rp, String filename, int mtu, int sws) {
             super(lp, rp, filename, mtu, sws);
         }
 
         @Override
         public TCPpacket handlePacket(TCPpacket p) {
-            return null; // should be null as we do not init as receiver
+            return new TCPpacket(); // FIXME 
         }
 
         @Override
         public TCPpacket getInitPacket() {
-            // FIXME need to have specific init packet
-            return new TCPpacket();
+            return null; // should be null as we do not init as receiver
         }
     }
 
