@@ -60,7 +60,7 @@ public class TCPend {
             // We need to print the following stats, which should be done here:
             // * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
-            TCPPacket p = new TCPPacket();
+            TCPpacket p = new TCPpacket();
             while (true) {
                 // work loop
                 if (p != null) handlePacket(p);
@@ -70,7 +70,7 @@ public class TCPend {
             //return false;
         }
 
-        public abstract TCPpacket handlePacket(TCPPacket p);
+        public abstract TCPpacket handlePacket(TCPpacket p);
         public abstract TCPpacket getInitPacket();
 
     }
@@ -84,7 +84,7 @@ public class TCPend {
         }
 
         @Override
-        public TCPpacket handlePacket(TCPPacket p) {
+        public TCPpacket handlePacket(TCPpacket p) {
             return null; // FIXME should not be null
         }
 
@@ -101,7 +101,7 @@ public class TCPend {
         }
 
         @Override
-        public TCPpacket handlePacket(TCPPacket p) {
+        public TCPpacket handlePacket(TCPpacket p) {
             return null; // should be null as we do not init as receiver
         }
 
