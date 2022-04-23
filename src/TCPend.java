@@ -60,7 +60,7 @@ public class TCPend {
             // We need to print the following stats, which should be done here:
             // * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
-            DatagramPacket p = getInitPacket();
+            TCPPacket p = new TCPPacket();
             while (true) {
                 // work loop
                 if (p != null) handlePacket(p);
@@ -71,7 +71,7 @@ public class TCPend {
         }
 
         // TODO may return something other than int if needed
-        public abstract DatagramPacket handlePacket(DatagramPacket p);
+        public abstract DatagramPacket handlePacket(TCPPacket p);
         public abstract DatagramPacket getInitPacket();
 
     }
@@ -85,7 +85,7 @@ public class TCPend {
         }
 
         @Override
-        public DatagramPacket handlePacket(DatagramPacket p) {
+        public DatagramPacket handlePacket(TCPPacket p) {
             return null; // FIXME should not be null
         }
 
@@ -102,7 +102,7 @@ public class TCPend {
         }
 
         @Override
-        public DatagramPacket handlePacket(DatagramPacket p) {
+        public DatagramPacket handlePacket(TCPPacket p) {
             return null; // should be null as we do not init as receiver
         }
 
