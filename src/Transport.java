@@ -14,6 +14,7 @@ public abstract class Transport {
     final protected List<Byte> buffer;
 
     protected long currentAck;
+    protected DatagramSocket;
 
     protected Transport(int lp, int rp, String filename, int mtu, int sws) {
         this.lp = lp;
@@ -29,6 +30,7 @@ public abstract class Transport {
         // each time loading the packet using the handlePacket method
         // that is implemented in the Sender and Receiver class
 
+
         // We need to print the following stats, which should be done here:
         // * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
@@ -39,6 +41,7 @@ public abstract class Transport {
             return false; // FIXME tmp break;
         }
 
+        // print stuff out here
         //return false;
     }
 
@@ -74,6 +77,7 @@ public abstract class Transport {
 
         public Receiver(int lp, int rp, String filename, int mtu, int sws) {
             super(lp, rp, filename, mtu, sws);
+            // read the file given by filename -> buffer
         }
 
         @Override
