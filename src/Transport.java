@@ -1,4 +1,6 @@
 import java.util.List;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
@@ -14,15 +16,16 @@ public abstract class Transport {
     final protected List<Byte> buffer;
 
     protected long currentAck;
-    protected DatagramSocket;
+    protected DatagramSocket socket;
 
-    protected Transport(int lp, int rp, String filename, int mtu, int sws) {
+    protected Transport(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
         this.lp = lp;
         this.rp = rp;
         this.filename = filename;
         this.mtu = mtu;
         this.sws = sws;
-        buffer = new ArrayList<>(); 
+        buffer = new ArrayList<>();
+        this.socket = new DatagramSocket(lp);
     }
 
     public boolean transfer() {
@@ -53,8 +56,9 @@ public abstract class Transport {
         final private String rip; // remote ip
         // ArrayList buffer (protected)
         // constructor fields (protected)
+        // Udp Socket (protected)
 
-        public Sender(int lp, int rp, String rip, String filename, int mtu, int sws) {
+        public Sender(int lp, int rp, String rip, String filename, int mtu, int sws) throws SocketException {
             super(lp, rp, filename, mtu, sws);
             this.rip = rip;
         }
@@ -74,8 +78,9 @@ public abstract class Transport {
     public static class Receiver extends Transport {
         // ArrayList buffer (protected)
         // constructor fields (protected)
+        // UDP Socket (protected)
 
-        public Receiver(int lp, int rp, String filename, int mtu, int sws) {
+        public Receiver(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
             super(lp, rp, filename, mtu, sws);
             // read the file given by filename -> buffer
         }

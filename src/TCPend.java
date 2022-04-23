@@ -1,4 +1,5 @@
 import java.net.DatagramPacket;
+import java.net.SocketException;
 
 public class TCPend {
 
@@ -9,7 +10,7 @@ public class TCPend {
         return "Expects arguments:\n" + sexp + rexp;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SocketException {
 
         if (args.length <= 0) System.out.println(getExpects());
         TransportBuilder tbuilder = new TransportBuilder();
@@ -46,7 +47,7 @@ public class TCPend {
         private int mtu;   // max transmission unit
         private int sws;    // sliding window size
 
-        Transport build() {
+        Transport build() throws SocketException {
             return isSender() ? new Transport.Sender(lp, rp, rip, filename, mtu, sws) :
                 new Transport.Receiver(lp, rp, filename, mtu, sws);
         }
