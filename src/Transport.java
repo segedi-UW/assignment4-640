@@ -22,6 +22,7 @@ public abstract class Transport {
     protected DatagramSocket socket;
     protected boolean isSender;
     protected boolean connectionInitialized;
+    protected InetAddress addr;
 
     protected Transport(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
         this.lp = lp;
@@ -42,15 +43,20 @@ public abstract class Transport {
         // We need to print the following stats, which should be done here:
         // * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
-        TCPpacket p = getInitPacket();
-        boolean toLoop = true;
-        while (toLoop) {
-            // work loop
-            if (p != null) handlePacket(p);
-            else toLoop = false;
-            return false; // FIXME tmp break;
-        }
+        TCPpacket p;
 
+        // boolean toLoop = true;
+        // while (toLoop) {
+        //     // work loop
+        //     if (p != null) handlePacket(p);
+        //     else toLoop = false;
+        //     return false; // FIXME tmp break;
+        // }
+
+        return false;
+    }
+
+    public void printPacket(TCPpacket p){
         // print stuff out here
         String msg = ""; // Can use a stringbuilder to make this faster
         if (isSender) msg += "snd ";
@@ -66,8 +72,6 @@ public abstract class Transport {
         else msg += " - ";
         msg += p.getSeq() + " " + p.getDataLen() + " " + p.getAckNum();
         System.out.println(msg); 
-
-        return false;
     }
 
     public abstract TCPpacket handlePacket(TCPpacket p);
@@ -85,6 +89,11 @@ public abstract class Transport {
             this.rip = rip;
             this.isSender = true;
             connectionInitialized = false;
+            try {
+                this.addr = InetAddress.getByName(rip);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
             testSend();
         }
 
@@ -98,21 +107,36 @@ public abstract class Transport {
             // FIXME need to have specific init packet
             TCPpacket packet = new TCPpacket();
             packet.setSyn(true);
-            packet.setSeq(0);
+            packet.setSeq(3);
             packet.setTime(System.nanoTime());
             return packet;
         }
 
         public void testSend() {
+            TCPpacket p = getInitPacket();
             try {
-                InetAddress addr = InetAddress.getByName(rip);
-                byte[] send = "Hello World".getBytes( "UTF-8" );
-                DatagramPacket data = new DatagramPacket(send, send.length, addr, rp);
-                socket.send(data);
+                socket.send(p.getPacket(addr, rp));
+                printPacket(p);
+                DatagramPacket pack = p.getPacket(addr, rp);
+                TCPpacket newPack = new TCPpacket(pack.getData());
+                printPacket(newPack);
+                // DatagramPacket data = new DatagramPacket( new byte[ 64*1024 ], 64*1024 );
+                // socket.receive(data);
+                // TCPpacket ackPacket = new TCPpacket(data.getData());
+                // printPacket(ackPacket);
             } catch (Exception e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
-            } 
+                //TODO: handle exception
+            }
+            // try {
+            //     InetAddress addr = InetAddress.getByName(rip);
+            //     byte[] send = "Hello World".getBytes( "UTF-8" );
+            //     DatagramPacket data = new DatagramPacket(send, send.length, addr, rp);
+            //     socket.send(data);
+            // } catch (Exception e) {
+            //     // TODO Auto-generated catch block
+            //     e.printStackTrace();
+            // } 
         }
     }
 
@@ -143,8 +167,8 @@ public abstract class Transport {
             try {
             DatagramPacket data = new DatagramPacket( new byte[ 64*1024 ], 64*1024 );
             socket.receive(data);
-            System.out.println( new String( data.getData(), 0, 
-                 data.getLength(), "UTF-8" ) );
+            TCPpacket prevPacket = new TCPpacket(data.getData());
+            printPacket(prevPacket);
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

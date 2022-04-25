@@ -1,4 +1,5 @@
 import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
 /**
@@ -89,9 +90,9 @@ public class TCPpacket {
         this.lengthFlags += flags; 
     }
 
-    public DatagramPacket getPacket() {
+    public DatagramPacket getPacket(InetAddress addr, int rp) {
         final byte[] packet = serialize();
-        return new DatagramPacket(packet, packet.length);
+        return new DatagramPacket(packet, packet.length, addr, rp);
     }
 
     /**
