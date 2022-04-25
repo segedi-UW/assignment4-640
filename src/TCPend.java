@@ -26,9 +26,10 @@ public class TCPend {
         }
 
         Transport t = tbuilder.build();
-        if (!t.transfer()) {
-            System.err.println("Error sending all bytes");
-        }
+        
+        // if (!t.transfer()) {
+        //     System.err.println("Error sending all bytes");
+        // }
 
     }
 

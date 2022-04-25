@@ -1,6 +1,9 @@
 import java.util.List;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 /**
@@ -17,6 +20,8 @@ public abstract class Transport {
 
     protected long currentAck;
     protected DatagramSocket socket;
+    protected boolean isSender;
+    protected boolean connectionInitialized;
 
     protected Transport(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
         this.lp = lp;
@@ -38,14 +43,31 @@ public abstract class Transport {
         // * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
         TCPpacket p = getInitPacket();
-        while (true) {
+        boolean toLoop = true;
+        while (toLoop) {
             // work loop
             if (p != null) handlePacket(p);
+            else toLoop = false;
             return false; // FIXME tmp break;
         }
 
         // print stuff out here
-        //return false;
+        String msg = ""; // Can use a stringbuilder to make this faster
+        if (isSender) msg += "snd ";
+        else msg += "rcv ";
+        msg += p.getTime();
+        if(p.isSyn()) msg += " S";
+        else msg += " -";
+        if(p.isAck()) msg += " A";
+        else msg += " -";
+        if(p.isFin()) msg += " F";
+        else msg += " -";
+        if(p.getDataLen() > 0) msg += " D ";
+        else msg += " - ";
+        msg += p.getSeq() + " " + p.getDataLen() + " " + p.getAckNum();
+        System.out.println(msg); 
+
+        return false;
     }
 
     public abstract TCPpacket handlePacket(TCPpacket p);
@@ -61,6 +83,9 @@ public abstract class Transport {
         public Sender(int lp, int rp, String rip, String filename, int mtu, int sws) throws SocketException {
             super(lp, rp, filename, mtu, sws);
             this.rip = rip;
+            this.isSender = true;
+            connectionInitialized = false;
+            testSend();
         }
 
         @Override
@@ -71,7 +96,23 @@ public abstract class Transport {
         @Override
         public TCPpacket getInitPacket() {
             // FIXME need to have specific init packet
-            return new TCPpacket();
+            TCPpacket packet = new TCPpacket();
+            packet.setSyn(true);
+            packet.setSeq(0);
+            packet.setTime(System.nanoTime());
+            return packet;
+        }
+
+        public void testSend() {
+            try {
+                InetAddress addr = InetAddress.getByName(rip);
+                byte[] send = "Hello World".getBytes( "UTF-8" );
+                DatagramPacket data = new DatagramPacket(send, send.length, addr, rp);
+                socket.send(data);
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } 
         }
     }
 
@@ -82,6 +123,9 @@ public abstract class Transport {
 
         public Receiver(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
             super(lp, rp, filename, mtu, sws);
+            this.isSender = false;
+            connectionInitialized = false;
+            testRec();
             // read the file given by filename -> buffer
         }
 
@@ -93,6 +137,18 @@ public abstract class Transport {
         @Override
         public TCPpacket getInitPacket() {
             return null; // should be null as we do not init as receiver
+        }
+
+        public void testRec() {
+            try {
+            DatagramPacket data = new DatagramPacket( new byte[ 64*1024 ], 64*1024 );
+            socket.receive(data);
+            System.out.println( new String( data.getData(), 0, 
+                 data.getLength(), "UTF-8" ) );
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } 
         }
     }
 }

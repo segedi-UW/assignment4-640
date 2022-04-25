@@ -44,6 +44,37 @@ public class TCPpacket {
         deserialize(src);
     }
 
+    /*
+    Sets the sequence number for the TCP header
+    */
+    public void setSeq(long num){
+        this.sequenceNumber = num;
+    }
+
+    public long getSeq() {
+        return this.sequenceNumber;
+    }
+
+    public void setTime(long stamp){
+        this.timestamp = stamp;
+    }
+
+    public void setAckNum(long num){
+        this.ack = num;
+    }
+
+    public long getAckNum() {
+        return this.ack;
+    }
+
+    public long getTime() {
+        return this.timestamp;
+    }
+
+    public int getDataLen() {
+        return this.data.length;
+    }
+
     /**
      * Sets the data for the TCPPacket.
      */
