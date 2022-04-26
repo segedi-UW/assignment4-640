@@ -72,8 +72,8 @@ public class TCPpacket {
         return this.timestamp;
     }
 
-    public int getDataLen() {
-        return this.data.length;
+    public long getDataLen() {
+        return this.lengthFlags >> 3;
     }
 
     /**
@@ -128,7 +128,10 @@ public class TCPpacket {
         this.timestamp = buf.getLong();
         this.lengthFlags = buf.getLong();
         this.checksum = buf.getLong();
-        buf.get(data, buf.position(), buf.remaining());
+        if (buf.remaining() > 0) {
+            this.data = new byte[buf.remaining()];
+            buf.get(this.data, buf.position(), buf.remaining());
+        } else this.data = new byte[0];
     }
 
     /**
