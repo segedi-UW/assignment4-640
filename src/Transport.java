@@ -165,7 +165,7 @@ public abstract class Transport {
 
         public void testRec() {
             try {
-            DatagramPacket data = new DatagramPacket( new byte[ 64*1024 ], 64*1024 );
+            DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
             socket.receive(data);
             TCPpacket prevPacket = new TCPpacket(data.getData());
             printPacket(prevPacket);
