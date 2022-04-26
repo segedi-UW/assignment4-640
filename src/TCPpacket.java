@@ -72,8 +72,8 @@ public class TCPpacket {
         return this.timestamp;
     }
 
-    public int getDataLen() {
-        return this.data.length;
+    public long getDataLen() {
+        return this.lengthFlags >> 3;
     }
 
     /**
