@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  *  The Transport class handles the bulk of the TCP general
@@ -62,7 +64,7 @@ public abstract class Transport {
 	public void printPacket(TCPpacket p){
 		// print stuff out here
 		String msg = ""; // Can use a stringbuilder to make this faster
-		if (isSender) msg += "snd ";
+		if (this instanceof Sender) msg += "snd ";
 		else msg += "rcv ";
 		msg += p.getTime();
 		if(p.isSyn()) msg += " S";
@@ -117,8 +119,13 @@ public abstract class Transport {
 		public TCPpacket handlePacket(TCPpacket p) {
 			// read the file given by filename -> buffer
 			// buffer the next sws number of bytes if 
-			if (p.getSeq() == nextBufSeq && reader.available() > 0)
-				bufferWindow();
+			try {
+				if (p.getSeq() == nextBufSeq && reader.available() > 0)
+					bufferWindow();
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+				System.exit(1);
+			}
 			return new TCPpacket(); // FIXME, take into account receieved packet p
 		}
 
@@ -126,33 +133,51 @@ public abstract class Transport {
 		public TCPpacket getInitPacket() {
 			// FIXME need to have specific init packet
 			TCPpacket packet = new TCPpacket();
-			packet.setSyn(true);
+			packet.setSyn();
 			packet.setSeq(3);
 			return packet;
 		}
 
-		private void bufferWindow() {
+		private void bufferWindow() throws IOException {
 			bufn = Math.min(reader.available(), buf.length);
-			buf = reader.read(buf); // returns int < max size of byte
+
+			for (int i = 0; i < bufn; i++)
+				buf[i] = (byte) reader.read();
+
 			nextBufSeq += sws;
 		}
 
 		public void testSend() {
 			TCPpacket p = getInitPacket();
+
 			try {
+				int rd = 0;
+				byte[] testbuf = new byte[256];
+				for (int i = 0; reader.available() > 0; i++, rd++)
+					testbuf[i] = (byte) reader.read();
+				System.out.println("Sending " + testbuf.length + " bytes");
+
+				ByteBuffer bb = ByteBuffer.wrap(testbuf);
+				StringBuffer sb = new StringBuffer("Should match:\n");
+				while (bb.remaining() > 1)
+					sb.append(bb.getChar());
+				System.out.println(sb.toString());
+
+				p.setData(testbuf, 0, rd);
 				DatagramPacket pack = p.getPacket(addr, rp);
 				socket.send(pack);
 				printPacket(p);
-				TCPpacket newPack = new TCPpacket(pack.getData());
+				TCPpacket newPack = TCPpacket.deserialize(pack.getData());
 				printPacket(newPack);
 				// DatagramPacket data = new DatagramPacket( new byte[ 64*1024 ], 64*1024 );
 				// socket.receive(data);
 				// TCPpacket ackPacket = new TCPpacket(data.getData());
 				// printPacket(ackPacket);
 			} catch (Exception e) {
+				System.err.println(e.getMessage());
 				e.printStackTrace();
 				//TODO: handle exception
-			}
+			} 
 			// try {
 			//     InetAddress addr = InetAddress.getByName(rip);
 			//     byte[] send = "Hello World".getBytes( "UTF-8" );
@@ -191,10 +216,19 @@ public abstract class Transport {
 			try {
 				DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
 				socket.receive(data);
-				TCPpacket prevPacket = new TCPpacket(data.getData());
+				TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
+				System.out.println("RCVL: " + prevPacket.getDataLen());
 				printPacket(prevPacket);
+
+				ByteBuffer bb = ByteBuffer.wrap(prevPacket.getData());
+				StringBuffer sb = new StringBuffer("Packet msg:\n");
+
+				while (bb.remaining() > 1) // in java chars are length 2
+					sb.append(bb.getChar());
+
+				System.out.println(sb.toString());
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
+				System.err.println(e.getMessage());
 				e.printStackTrace();
 			} 
 		}
