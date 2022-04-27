@@ -122,10 +122,12 @@ public class TCPpacket {
     }
 
     private void deserialize(byte[] src) {
+        System.out.println("Reached");
         ByteBuffer buf = ByteBuffer.wrap(src);
         this.sequenceNumber = buf.getLong();
         this.ack = buf.getLong();
         this.timestamp = buf.getLong();
+        System.out.println(timestamp);
         this.lengthFlags = buf.getLong();
         this.checksum = buf.getLong();
         if (buf.remaining() > 0) {
