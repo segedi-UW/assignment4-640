@@ -132,7 +132,7 @@ public class TCPpacket {
         this.checksum = buf.getLong();
         if (buf.remaining() > 0) {
             this.data = new byte[buf.remaining()];
-            buf.get(this.data, buf.position(), buf.remaining());
+            buf.get(this.data, 0, buf.remaining());
         } else this.data = new byte[0];
     }
 

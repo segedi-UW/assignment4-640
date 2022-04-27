@@ -108,16 +108,15 @@ public abstract class Transport {
             TCPpacket packet = new TCPpacket();
             packet.setSyn(true);
             packet.setSeq(3);
-            packet.setTime(System.nanoTime());
             return packet;
         }
 
         public void testSend() {
             TCPpacket p = getInitPacket();
             try {
-                socket.send(p.getPacket(addr, rp));
-                printPacket(p);
                 DatagramPacket pack = p.getPacket(addr, rp);
+                socket.send(pack);
+                printPacket(p);
                 TCPpacket newPack = new TCPpacket(pack.getData());
                 printPacket(newPack);
                 // DatagramPacket data = new DatagramPacket( new byte[ 64*1024 ], 64*1024 );
