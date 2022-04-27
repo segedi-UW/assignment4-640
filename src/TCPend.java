@@ -1,6 +1,7 @@
 import java.net.DatagramPacket;
 import java.net.SocketException;
 
+
 public class TCPend {
 
 
@@ -20,7 +21,7 @@ public class TCPend {
             if (arg.startsWith("-")) {
                 popt = arg.substring(1);
             } else if (popt != null && !tbuilder.add(popt, arg)) {
-                System.err.println("Error building Transport.");
+                System.err.println("Error building Transport, bad args: " + popt + ", " + arg);
                 return;
             }
         }
