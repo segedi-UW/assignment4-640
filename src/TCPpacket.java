@@ -49,6 +49,15 @@ public class TCPpacket {
 		this.data = data;
 	}
 
+	/**
+	 * The timestamp is set on serialization
+	 * Format:
+	 * Byte Sequence Number [8]
+	 * Acknowledgment [8]
+	 * Timestamp [8]
+	 * Length | S | F | A) [7.25,0.75]
+	 * All zeroes | Checksum (split evenly) [8]
+	 */
 	public static TCPpacket deserialize(byte[] src) throws ChecksumException {
 		TCPpacket p = new TCPpacket();
 		ByteBuffer buf = ByteBuffer.wrap(src);
@@ -195,22 +204,18 @@ public class TCPpacket {
 	public void setFlag(int flag) {
 		if (flag > FLAG_SYN)
 			throw new IllegalArgumentException(String.format("Invalid flag: %x\n", flag));
-		clearFlags();
 		this.lengthFlags |= flag;
 	}
 
 	public void setSyn() {
-		clearFlags();
 		setFlag(FLAG_SYN);
 	}
 
 	public void setFin() {
-		clearFlags();
 		setFlag(FLAG_FIN);
 	}
 
 	public void setAck() {
-		clearFlags();
 		setFlag(FLAG_ACK);
 	}
 
