@@ -1,9 +1,9 @@
-cargs=Transport.java TCPpacket.java
+obj=Transport.java TCPpacket.java
 rsargs=-p 4700 -s localhost -a 5000 -f test.txt -m 1500 -c 5
 rrargs=-p 5000 -m 1500 -c 5 -f intest.txt
 
-TCPend.class : *.java
-	javac TCPend.java $(cargs)
+TCPend.class : $(obj)
+	javac TCPend.java
 
 snd : TCPend.class
 	java -ea TCPend $(rsargs)
