@@ -203,6 +203,7 @@ public class TCPpacket {
 		final byte[] packet = serialize();
         if(addr == null)
 			throw new NullPointerException("Cannot send to null address");
+        System.out.println(addr.toString());
 		return new DatagramPacket(packet, packet.length, addr, rp);
 	}
 
