@@ -5,6 +5,7 @@ import javax.xml.crypto.Data;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -254,15 +255,19 @@ public abstract class Transport {
             try {
                 DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
                 socket.receive(data);
+                SocketAddress sockAddr = data.getSocketAddress();
 
                 TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
+                printPacket(prevPacket);
 
                 TCPpacket packet = new TCPpacket();
                 packet.setAck();
+                packet.setSyn();
                 packet.setAckNum(prevPacket.getSeq()+1);
                 packet.setSeq(100); // Might need to change to random number
 
                 data = packet.getPacket(addr, rp);
+                data.setSocketAddress(sockAddr);
                 socket.send(data);
                 printPacket(TCPpacket.deserialize(data.getData()));
 

@@ -153,6 +153,9 @@ public class TCPpacket {
 
 	public DatagramPacket getPacket(InetAddress addr, int rp) {
 		final byte[] packet = serialize();
+        if(addr == null){
+            return new DatagramPacket(packet, packet.length, rp);
+        }
 		return new DatagramPacket(packet, packet.length, addr, rp);
 	}
 
