@@ -1,4 +1,7 @@
 import java.util.List;
+
+import javax.xml.crypto.Data;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -112,7 +115,8 @@ public abstract class Transport {
 				e.printStackTrace();
 				System.exit(1);
 			} 
-			testSend();
+			// testSend();
+            initConnection();
 		}
 
 		@Override
@@ -169,26 +173,38 @@ public abstract class Transport {
 				printPacket(p);
 				TCPpacket newPack = TCPpacket.deserialize(pack.getData());
 				printPacket(newPack);
-				// DatagramPacket data = new DatagramPacket( new byte[ 64*1024 ], 64*1024 );
-				// socket.receive(data);
-				// TCPpacket ackPacket = new TCPpacket(data.getData());
-				// printPacket(ackPacket);
 			} catch (Exception e) {
 				System.err.println(e.getMessage());
 				e.printStackTrace();
 				//TODO: handle exception
 			} 
-			// try {
-			//     InetAddress addr = InetAddress.getByName(rip);
-			//     byte[] send = "Hello World".getBytes( "UTF-8" );
-			//     DatagramPacket data = new DatagramPacket(send, send.length, addr, rp);
-			//     socket.send(data);
-			// } catch (Exception e) {
-			//     // TODO Auto-generated catch block
-			//     e.printStackTrace();
-			// } 
 		}
-	}
+	
+        private void initConnection() {
+            TCPpacket p = getInitPacket();
+            try {
+                DatagramPacket d = p.getPacket(addr, rp);
+                socket.send(d);
+                printPacket(TCPpacket.deserialize(d.getData()));
+                DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
+                socket.receive(data);
+                TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
+
+                TCPpacket packet = new TCPpacket();
+                packet.setAck();
+                packet.setAckNum(prevPacket.getSeq()+1);
+                
+                d = packet.getPacket(addr, rp);
+                socket.send(d);
+                printPacket(TCPpacket.deserialize(d.getData()));
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+        }
+    }
 
 	public static class Receiver extends Transport {
 		// ArrayList buffer (protected)
@@ -199,7 +215,8 @@ public abstract class Transport {
 			super(lp, rp, filename, mtu, sws);
 			this.isSender = false; // FIXME why do we check this? in this class we know we are not?
 			connectionInitialized = false;
-			testRec();
+			// testRec();
+            initConnection();
 		}
 
 		@Override
@@ -232,5 +249,32 @@ public abstract class Transport {
 				e.printStackTrace();
 			} 
 		}
-	}
+        
+        private void initConnection() {
+            try {
+                DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
+                socket.receive(data);
+
+                TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
+
+                TCPpacket packet = new TCPpacket();
+                packet.setAck();
+                packet.setAckNum(prevPacket.getSeq()+1);
+                packet.setSeq(100); // Might need to change to random number
+
+                data = packet.getPacket(addr, rp);
+                socket.send(data);
+                printPacket(TCPpacket.deserialize(data.getData()));
+
+                data = new DatagramPacket( new byte[ mtu ], mtu );
+                socket.receive(data);
+                prevPacket = TCPpacket.deserialize(data.getData());
+                System.out.println("Connection Initialized");
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+    }
 }
