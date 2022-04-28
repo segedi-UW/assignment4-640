@@ -261,6 +261,8 @@ public abstract class Transport {
                 
 				packet.setCurrentTime();
                 d = packet.getPacket(addr, rp);
+				System.out.println("Sending packet2:");
+				TCPpacket.printPacket(d.getData());
                 socket.send(d);
                 printPacket(TCPpacket.deserialize(d.getData()));
             }
