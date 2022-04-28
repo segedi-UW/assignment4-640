@@ -190,7 +190,7 @@ public class TCPpacket {
 	}
 
 	public void setFlag(int flag) {
-		if (flag > FLAG_SYN || flag % 2 == 1)
+		if (flag > FLAG_SYN)
 			throw new IllegalArgumentException(String.format("Invalid flag: %x\n", flag));
 		clearFlags();
 		this.lengthFlags |= flag;
