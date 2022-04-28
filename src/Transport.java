@@ -330,7 +330,6 @@ public abstract class Transport {
                 addr = data.getAddress();
 				packet.setCurrentTime();
                 data = packet.getPacket(addr, rp);
-                // data.setSocketAddress(sockAddr);
                 socket.send(data);
                 printPacket(TCPpacket.deserialize(data.getData()));
 
