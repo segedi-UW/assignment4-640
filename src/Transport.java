@@ -7,6 +7,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.io.FileInputStream;
@@ -26,12 +27,17 @@ public abstract class Transport {
 	final protected int mtu;   // max transmission unit
 	final protected int sws;    // sliding window size
 	final protected List<Byte> buffer;
+    final protected double a = .875;
+    final protected double b = 1 - a;
 
 	protected long currentAck;
 	protected DatagramSocket socket;
 	protected boolean isSender;
 	protected boolean connectionInitialized;
 	protected InetAddress addr;
+    protected long timeOut = 5000;
+    protected double ERTT;
+    protected double EDEV;
 
 	protected Transport(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
 		this.lp = lp;
@@ -83,6 +89,61 @@ public abstract class Transport {
 		System.out.println(msg); 
 	}
 
+    private void updateTimeOut(TCPpacket p) {
+        long S = p.getSeq();
+        long T = p.getTime();
+        long C = System.nanoTime();
+        if (S == 0){
+            ERTT = (C - T);
+            EDEV = 0;
+            timeOut = (long) (2*ERTT);
+        }
+        else{
+            double SRTT = (C - T);
+            double SDEV = Math.abs(SRTT - ERTT);
+            ERTT = a*ERTT + (1-a)*SRTT;
+            EDEV = b*EDEV + (1-b)*SDEV;
+            timeOut = (long) (ERTT + 4*EDEV);
+        }
+    }
+    
+    private int getTimeOut() {
+        return (int) this.timeOut;
+    }
+
+    public TCPpacket receiveData(DatagramPacket data, DatagramPacket out) {
+        int reTransmissions = 0;
+        try {
+            socket.setSoTimeout(getTimeOut());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        while(reTransmissions < 16) {
+            try {
+                socket.receive(data);
+                TCPpacket p = TCPpacket.deserialize(data.getData());
+                updateTimeOut(p);
+                return p;
+            } catch (SocketTimeoutException e) {
+               // resend
+               try {
+                    System.out.println("Retransmitting");
+                    socket.send(out);
+                    reTransmissions += 1;
+               } catch (Exception ex) {
+                   ex.printStackTrace();
+               }
+               continue;
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Tried Retransmitting 16 times");
+        System.exit(1);
+        return null;
+    }
+
 	public abstract TCPpacket handlePacket(TCPpacket p);
 	public abstract TCPpacket getInitPacket();
 
@@ -103,6 +164,7 @@ public abstract class Transport {
 			this.isSender = true;
 			connectionInitialized = false;
 			try {
+                System.out.println("RIP:" + rip + ":");
 				this.addr = InetAddress.getByName(rip);
 				buf = new byte[sws];
 				bufn = 0;
@@ -188,8 +250,7 @@ public abstract class Transport {
                 socket.send(d);
                 printPacket(TCPpacket.deserialize(d.getData()));
                 DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
-                socket.receive(data);
-                TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
+                TCPpacket prevPacket = receiveData(data, d);
 
                 TCPpacket packet = new TCPpacket();
                 packet.setAck();
@@ -203,7 +264,6 @@ public abstract class Transport {
                 e.printStackTrace();
                 System.exit(1);
             }
-
         }
     }
 
@@ -255,7 +315,7 @@ public abstract class Transport {
             try {
                 DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
                 socket.receive(data);
-                SocketAddress sockAddr = data.getSocketAddress();
+                // SocketAddress sockAddr = data.getSocketAddress();
 
                 TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
                 printPacket(prevPacket);
@@ -266,8 +326,9 @@ public abstract class Transport {
                 packet.setAckNum(prevPacket.getSeq()+1);
                 packet.setSeq(100); // Might need to change to random number
 
+                addr = InetAddress.getByName("127.0.0.1");
                 data = packet.getPacket(addr, rp);
-                data.setSocketAddress(sockAddr);
+                // data.setSocketAddress(sockAddr);
                 socket.send(data);
                 printPacket(TCPpacket.deserialize(data.getData()));
 
