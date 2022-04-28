@@ -184,17 +184,23 @@ public abstract class Transport {
         private void initConnection() {
             TCPpacket p = getInitPacket();
             try {
+				p.setCurrentTime();
                 DatagramPacket d = p.getPacket(addr, rp);
+				System.out.println("Sending packet:");
+				TCPpacket.printPacket(d.getData());
                 socket.send(d);
                 printPacket(TCPpacket.deserialize(d.getData()));
                 DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
                 socket.receive(data);
+				System.out.println("Printing rcv in Sender");
+				TCPpacket.printPacket(data.getData());
                 TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
 
                 TCPpacket packet = new TCPpacket();
                 packet.setAck();
                 packet.setAckNum(prevPacket.getSeq()+1);
                 
+				packet.setCurrentTime();
                 d = packet.getPacket(addr, rp);
                 socket.send(d);
                 printPacket(TCPpacket.deserialize(d.getData()));
@@ -256,7 +262,8 @@ public abstract class Transport {
                 DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
                 socket.receive(data);
                 SocketAddress sockAddr = data.getSocketAddress();
-
+				System.out.println("Printing rcv packet:");
+				TCPpacket.printPacket(data.getData());
                 TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
                 printPacket(prevPacket);
 
@@ -265,7 +272,7 @@ public abstract class Transport {
                 packet.setSyn();
                 packet.setAckNum(prevPacket.getSeq()+1);
                 packet.setSeq(100); // Might need to change to random number
-
+				packet.setCurrentTime();
                 data = packet.getPacket(addr, rp);
                 data.setSocketAddress(sockAddr);
                 socket.send(data);

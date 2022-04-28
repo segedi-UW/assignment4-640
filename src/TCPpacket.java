@@ -73,10 +73,11 @@ public class TCPpacket {
 
 		String tmp = String.format("Remaining (%d)", buf.remaining());
 
-		if (buf.remaining() > 0) {
-			p.data = new byte[buf.remaining()];
-			buf.get(p.data, 0, buf.remaining());
-		} else p.data = new byte[0];
+		if (p.getDataLen() > Integer.MAX_VALUE)
+			System.err.println("WARNING: length of data too long to hold in mem.");
+
+		p.data = new byte[(int)p.getDataLen()];
+		buf.get(p.data, 0,(int)p.getDataLen());
 
 		tmp += String.format(" length (%d)", p.data.length);
 		System.out.println(tmp);
@@ -86,6 +87,36 @@ public class TCPpacket {
 			throw new ChecksumException("Checksum was invalid: " + cksm + " != " + p.checksum);
 		}
 		return p;
+	}
+
+	public static void printPacket(byte[] data) {
+		ByteBuffer buf = ByteBuffer.wrap(data);
+		StringBuffer sb = new StringBuffer();
+		sb.append("Seq: ").append(buf.getLong()).append('\n');
+		sb.append("Ack: ").append(buf.getLong()).append('\n');
+		sb.append("time: ").append(buf.getLong()).append('\n');
+		long lengthFlags = buf.getLong();
+		long length = lengthFlags >> 3;
+		sb.append("length: ").append(length).append('\n');
+		if ((lengthFlags & FLAG_SYN) > 0)
+			sb.append("S");
+		if ((lengthFlags & FLAG_ACK) > 0)
+			sb.append("A");
+		if ((lengthFlags & FLAG_FIN) > 0)
+			sb.append("F");
+		sb.append('\n');
+		// read the checksum, then set to zero for checksum validation
+		sb.append("chksum: ").append(buf.getLong());
+		sb.append('\n');
+
+		for (long i = 0; i < length; i++) {
+			if (i > 20) {
+				sb.append("\n");
+				i = 0;
+			}
+			sb.append(' ').append(buf.get()).append(' ');
+		}
+		System.out.println(sb.toString());
 	}
 
 	/**
@@ -121,6 +152,14 @@ public class TCPpacket {
 			}
 		}
 		return ~(sum & 0xFFFF);
+	}
+
+	public void setCurrentTime() {
+		this.timestamp = System.nanoTime();
+	}
+
+	public void setTime(long time) {
+		this.timestamp = time;
 	}
 
 	public void setSeq(long num){
@@ -186,7 +225,6 @@ public class TCPpacket {
 		ByteBuffer buf = ByteBuffer.allocate(len);
 		buf.putLong(sequenceNumber);
 		buf.putLong(ack);
-		timestamp = System.nanoTime();
 		buf.putLong(timestamp);
 		buf.putLong(lengthFlags);
 		buf.mark();     // position at start of checksum
