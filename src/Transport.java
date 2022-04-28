@@ -321,11 +321,7 @@ public abstract class Transport {
             try {
                 DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
                 socket.receive(data);
-                // SocketAddress sockAddr = data.getSocketAddress();
-				System.out.println("Printing rcv packet:");
-				TCPpacket.printPacket(data.getData());
                 TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
-                printPacket(prevPacket);
 
                 TCPpacket packet = new TCPpacket();
                 packet.setAck();
@@ -333,7 +329,7 @@ public abstract class Transport {
                 packet.setAckNum(prevPacket.getSeq()+1);
                 packet.setSeq(100); // Might need to change to random number
 
-                addr = InetAddress.getByName("127.0.0.1");
+                addr = data.getAddress();
 				packet.setCurrentTime();
                 data = packet.getPacket(addr, rp);
                 // data.setSocketAddress(sockAddr);
