@@ -11,6 +11,12 @@ snd : TCPend.class
 rcv : TCPend.class
 	java -ea TCPend $(rrargs)
 
+Test.class : Test.java
+	javac Test.java
+
+test : Test.class
+	java Test
+
 .PHONY : clean
 clean :
 	@-rm -f *.class
