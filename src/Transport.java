@@ -24,7 +24,7 @@ public abstract class Transport {
 	final protected String filename;
 	final protected int mtu;   // max transmission unit
 	final protected int sws;    // sliding window size
-	final protected List<Byte> buffer;
+	final protected TCPpacket[] buffer;
 	final protected double a = .875;
 	final protected double b = 1 - a;
 	final protected int maxDataSize;
@@ -46,7 +46,7 @@ public abstract class Transport {
 		this.filename = filename;
 		this.mtu = mtu;
 		this.sws = sws;
-		buffer = new ArrayList<>();
+		this.buffer = new TCPpacket[sws];
 		this.socket = new DatagramSocket(lp);
 		this.maxDataSize = mtu - 20 - 8 - 24; // includes our header, used to split file into chunks
 	}
@@ -127,6 +127,7 @@ public abstract class Transport {
 		indp.setData(p.serialize());
 		try {
 			socket.send(indp);
+			printPacket(p, true);
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(1); // FIXME may change to return boolean etc
@@ -137,6 +138,7 @@ public abstract class Transport {
 		if (bufferdp == null)
 			throw new NullPointerException("Channel is not init");
 		sendData(bufferdp, p);
+		printPacket(p, true);
 	}
 
 	/**
@@ -162,6 +164,7 @@ public abstract class Transport {
 				socket.receive(indp);
 				TCPpacket p = TCPpacket.deserialize(indp.getData());
 				updateTimeOut(p);
+				printPacket(p, false);
 				return p;
 			} catch (SocketTimeoutException e) {
 				// resend

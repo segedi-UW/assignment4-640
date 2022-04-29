@@ -28,7 +28,6 @@ public class Sender extends Transport {
 		this.isSender = true;
 		connectionInitialized = false;
 		try {
-			System.out.println("RIP:" + rip + ":");
 			this.addr = InetAddress.getByName(rip);
 			buf = new byte[sws];
 			bufn = 0;
@@ -88,7 +87,6 @@ public class Sender extends Transport {
 			DatagramPacket bufdp = new DatagramPacket(new byte[mtu], mtu, addr, rp);
 
 			sendData(bufdp, init);
-			System.out.println("Sent");
 
 			System.out.println("Reading");
 			TCPpacket initRsp = receiveData(bufdp, init);
@@ -107,7 +105,6 @@ public class Sender extends Transport {
 			rspAck.setCurrentTime();
 			sendData(bufdp, rspAck);
 			System.out.println("Sent Acknowledgement");
-			// do we need to read in opposing ack?
 			return bufdp;
 		}
 		catch (Exception e){
