@@ -41,7 +41,6 @@ public class Sender extends Transport {
 			e.printStackTrace();
 			System.exit(1);
 		} 
-		initConnection();
 	}
 
 	private void bufferWindow() throws IOException {
@@ -101,6 +100,9 @@ public class Sender extends Transport {
 
 	@Override
 	protected TCPpacket transferData() {
+		TCPpacket p = new TCPpacket();
+		p.setFin();
+		sendData(p);
 		return null;
 	}
 

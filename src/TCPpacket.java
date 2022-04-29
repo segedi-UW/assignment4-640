@@ -60,7 +60,8 @@ public class TCPpacket {
 	 */
 	public static TCPpacket deserialize(byte[] src) throws ChecksumException {
 		TCPpacket p = new TCPpacket();
-		ByteBuffer buf = ByteBuffer.wrap(src);
+		// no mutations in original array this way
+		ByteBuffer buf = ByteBuffer.wrap(Arrays.copyOf(src, src.length));
 		p.sequenceNumber = buf.getInt();
 		p.ack = buf.getInt();
 		p.timestamp = buf.getLong();
@@ -160,7 +161,7 @@ public class TCPpacket {
 	}
 
 	public void setData(byte[] data, int offset, int length) {
-		setData(Arrays.copyOfRange(data, offset, length));
+		setData(Arrays.copyOfRange(data, offset, length)); // FIXME this results in two copies - unecessaary, refactor
 	}
 
 	public byte[] getData() {
@@ -191,8 +192,7 @@ public class TCPpacket {
 		checksum = calcChecksum(buf.duplicate());
 		buf.reset();    // rewrite at checksum
 		buf.putInt(checksum);
-		byte[] a = buf.array();
-		return a;
+		return buf.array();
 	}
 
 	public void setFlag(int flag) {

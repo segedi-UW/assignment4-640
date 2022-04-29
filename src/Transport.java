@@ -2,6 +2,8 @@ import java.util.List;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.nio.channels.DatagramChannel;
+import java.net.InetSocketAddress;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
@@ -32,7 +34,9 @@ public abstract class Transport {
 	protected int rp; // remote port
 	private DatagramPacket bufferdp;
 	protected int currentAck;
+	protected int currentWindow;
 	protected DatagramSocket socket;
+	protected DatagramChannel channel;
 	protected boolean isSender;
 	protected boolean connectionInitialized;
 	protected InetAddress addr;
@@ -47,7 +51,14 @@ public abstract class Transport {
 		this.mtu = mtu;
 		this.sws = sws;
 		this.buffer = new TCPpacket[sws];
-		this.socket = new DatagramSocket(lp);
+		try {
+			this.channel = DatagramChannel.open();
+			this.socket = channel.socket();
+			this.socket.bind(new InetSocketAddress(lp));
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			System.exit(1);
+		}
 		this.maxDataSize = mtu - 20 - 8 - 24; // includes our header, used to split file into chunks
 	}
 
@@ -61,20 +72,20 @@ public abstract class Transport {
 		}
 		try {
 			TCPpacket last = TCPpacket.deserialize(bufferdp.getData());
+			channel.connect(bufferdp.getSocketAddress());
 			currentAck = last.getAckNum();
 		} catch (ChecksumException e) {
 			System.err.println("Bad initConnection() - no readable ack");
 			return false;
+		} catch (IOException e) {
+			System.err.println("Failed to connect DatagramChannel() " + e.getMessage());
+			System.exit(1);
 		}
 
 		// Set these just in case
 		rp = bufferdp.getPort();
 		addr = bufferdp.getAddress();
 
-		// We need to print the following stats, which should be done here:
-		// * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
-
-		// This is the intermediate loop
 		TCPpacket fin = transferData();
 
 		termConnection(fin);
@@ -104,6 +115,7 @@ public abstract class Transport {
 		long T = p.getTime();
 		long C = System.nanoTime();
 		if (S == 0){
+			System.out.println("Setting init");
 			ERTT = (C - T);
 			EDEV = 0;
 			timeOut = (long) (2*ERTT);
@@ -157,7 +169,9 @@ public abstract class Transport {
 		if (indp == null) throw new NullPointerException("buffer DatagramPacket is not initialized. Likely called receiveData(TCPpacket) before or in initConnection()");
 		int reTransmissions = 0;
 		try {
-			socket.setSoTimeout(getTimeOut());
+			int to = getTimeOut();
+			socket.setSoTimeout(5000);
+			System.out.println("timeout: " + to);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
