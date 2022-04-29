@@ -50,8 +50,8 @@ public class TCPend {
         private int sws;    // sliding window size
 
         Transport build() throws SocketException {
-            return isSender() ? new Transport.Sender(lp, rp, rip, filename, mtu, sws) :
-                new Transport.Receiver(lp, rp, filename, mtu, sws);
+            return isSender() ? new Sender(lp, rp, rip, filename, mtu, sws) :
+                new Receiver(lp, rp, filename, mtu, sws);
         }
 
         public boolean isSender() {
