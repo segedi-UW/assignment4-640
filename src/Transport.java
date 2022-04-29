@@ -248,10 +248,10 @@ public abstract class Transport {
             try {
 				p.setCurrentTime();
                 DatagramPacket d = p.getPacket(addr, rp);
-				System.out.println("Sending packet:");
-				TCPpacket.printPacket(d.getData());
+				// System.out.println("Sending packet:");
+				// TCPpacket.printPacket(d.getData());
                 socket.send(d);
-                printPacket(TCPpacket.deserialize(d.getData()));
+                // printPacket(TCPpacket.deserialize(d.getData()));
                 DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
                 TCPpacket prevPacket = receiveData(data, d);
 
@@ -291,7 +291,11 @@ public abstract class Transport {
 
 		@Override
 		public TCPpacket getInitPacket() {
-			return null; // should be null as we do not init as receiver
+			TCPpacket packet = new TCPpacket();
+			packet.setSyn();
+			packet.setSeq(3);
+			return packet;
+			// return null; // should be null as we do not init as receiver
 		}
 
 		public void testRec() {
@@ -321,16 +325,16 @@ public abstract class Transport {
                 socket.receive(data);
                 TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
 
-                TCPpacket packet = new TCPpacket();
-                packet.setAck();
-                packet.setSyn();
-                packet.setAckNum(prevPacket.getSeq()+1);
-                packet.setSeq(100); // Might need to change to random number
+                TCPpacket packet = getInitPacket();
+                // packet.setAck();
+                // packet.setSyn();
+                // packet.setAckNum(prevPacket.getSeq()+1);
+                // packet.setSeq(100); // Might need to change to random number
+				// packet.setCurrentTime();
+				// printPacket(packet);
 
-                addr = data.getAddress();
-				packet.setCurrentTime();
-                data = packet.getPacket(addr, rp);
-                socket.send(data);
+                DatagramPacket pack = packet.getPacket(data.getAddress(), rp);
+                socket.send(pack);
                 printPacket(TCPpacket.deserialize(data.getData()));
 
                 data = new DatagramPacket( new byte[ mtu ], mtu );

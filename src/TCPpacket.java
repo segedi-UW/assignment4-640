@@ -1,5 +1,6 @@
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -201,7 +202,13 @@ public class TCPpacket {
 
 	public DatagramPacket getPacket(InetAddress addr, int rp) {
 		final byte[] packet = serialize();
-        System.out.println(addr.toString());
+        System.out.println("\n\n"+addr.toString()+"\n\n");
+        try {
+            System.out.println("\n\n"+InetAddress.getLocalHost()+"\n\n");
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 		return new DatagramPacket(packet, packet.length, addr, rp);
 	}
 
