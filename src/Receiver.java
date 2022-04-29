@@ -12,7 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public static class Receiver extends Transport {
+public class Receiver extends Transport {
 	// ArrayList buffer (protected)
 	// constructor fields (protected)
 	// UDP Socket (protected)
