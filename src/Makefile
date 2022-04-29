@@ -1,23 +1,33 @@
-obj=Transport.java TCPpacket.java TCPend.java
+JFLAGS = -g
+JC = javac
 rsargs=-p 4700 -s localhost -a 5000 -f test.txt -m 1500 -c 5
 rrargs=-p 5000 -m 1500 -c 5 -f intest.txt
 
-TCPend.class : clean $(obj)
-	javac TCPend.java
 
-snd : TCPend.class
+.SUFFIXES: .java .class
+
+.java.class:
+	$(JC) $(JFLAGS) $*.java
+
+CLASSES = \
+		  TCPend.java \
+		  Transport.java \
+		  Test.java \
+
+default: classes
+
+classes: $(CLASSES:.java=.class)
+
+snd : classes
 	java -ea TCPend $(rsargs)
 
-rcv : TCPend.class
+rcv : classes
 	java -ea TCPend $(rrargs)
 
-Test.class : Test.java
-	javac Test.java
-
-test : Test.class
+test : classes
 	java Test
 
 .PHONY : clean
 clean :
-	@-rm -f *.class
+	$(RM) *.class
 
