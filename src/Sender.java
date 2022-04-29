@@ -117,7 +117,7 @@ public class Sender extends Transport {
 	}
 
 	@Override
-	protected void termConnection() {
+	protected void termConnection(TCPpacket finPacket) {
 		// FIXME
 	}
 }

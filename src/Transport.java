@@ -60,24 +60,30 @@ public abstract class Transport {
 			return false;
 		}
 
+		// Set these just in case
 		rp = bufferdp.getPort();
 		addr = bufferdp.getAddress();
 
 		// We need to print the following stats, which should be done here:
 		// * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
-		TCPpacket p;
-
 		// This is the intermediate loop
-		// boolean toLoop = true;
-		// while (toLoop) {
-		//     // work loop
-		//     if (p != null) handlePacket(p);
-		//     else toLoop = false;
-		//     return false; // FIXME tmp break;
-		// }
+		TCPpacket toSend;
+		TCPpacket response = null;
+		TCPpacket fin = null;
+		do {
+			toSend = handlePacket(response);
+			sendData(toSend);
+			response = receiveData(toSend);
 
-		termConnection();
+			//fin = toSend.isFin() ? toSend : 
+			if (toSend.isFin())
+				fin = toSend;
+			else if (response.isFin())
+				fin = response;
+		} while(fin == null);
+
+		termConnection(fin);
 		return true;
 	}
 
@@ -133,7 +139,11 @@ public abstract class Transport {
 		}
 	}
 
-	public void sendData(TCPpacket p) {
+	/**
+	 * NOTE Should only be called after initConnection returns
+	 *
+	 */
+	private void sendData(TCPpacket p) {
 		if (bufferdp == null)
 			throw new NullPointerException("Channel is not init");
 		sendData(bufferdp, p);
@@ -143,7 +153,7 @@ public abstract class Transport {
 	 * NOTE Should only be called after initConnection returns
 	 *
 	 */
-	public TCPpacket receiveData(TCPpacket out) {
+	private TCPpacket receiveData(TCPpacket out) {
 		return receiveData(bufferdp, out);
 	}
 
@@ -167,7 +177,7 @@ public abstract class Transport {
 				// resend
 				try {
 					System.out.println("Retransmitting");
-					socket.send(bufferdp); // should be set with data already
+					socket.send(indp); // should be set with data already
 					reTransmissions += 1;
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -184,7 +194,7 @@ public abstract class Transport {
 		return null;
 	}
 
-	public abstract TCPpacket handlePacket(TCPpacket p);
+	public abstract TCPpacket handlePacket(TCPpacket received);
 
 	/**
 	 * The connection should be initialized on return
@@ -201,6 +211,6 @@ public abstract class Transport {
 	 * be terminated. Perform termination
 	 * procedure, then close sockets.
 	 */
-	protected abstract void termConnection();
+	protected abstract void termConnection(TCPpacket finPacket);
 
 }
