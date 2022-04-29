@@ -31,7 +31,7 @@ public abstract class Transport {
 
 	protected int rp; // remote port
 	private DatagramPacket bufferdp;
-	protected long currentAck;
+	protected int currentAck;
 	protected DatagramSocket socket;
 	protected boolean isSender;
 	protected boolean connectionInitialized;
