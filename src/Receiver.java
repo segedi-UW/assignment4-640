@@ -27,11 +27,6 @@ public class Receiver extends Transport {
 		initConnection();
 	}
 
-	@Override
-	public TCPpacket handlePacket(TCPpacket p) {
-		return new TCPpacket(); // FIXME 
-	}
-
 	/*
 	 * A            			B
 	 * |						|
@@ -74,7 +69,9 @@ public class Receiver extends Transport {
 		}
 	}
 
-	protected DatagramPacket transferData() {
+	protected TCPpacket transferData() {
+		// buffer 
+
 		return null;
 	}
 

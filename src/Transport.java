@@ -31,7 +31,7 @@ public abstract class Transport {
 
 	protected int rp; // remote port
 	private DatagramPacket bufferdp;
-	protected long currentAck;
+	protected int currentAck;
 	protected DatagramSocket socket;
 	protected boolean isSender;
 	protected boolean connectionInitialized;
@@ -59,6 +59,13 @@ public abstract class Transport {
 			System.err.println("Failed to connect");
 			return false;
 		}
+		try {
+			TCPpacket last = TCPpacket.deserialize(bufferdp.getData());
+			currentAck = last.getAckNum();
+		} catch (ChecksumException e) {
+			System.err.println("Bad initConnection() - no readable ack");
+			return false;
+		}
 
 		// Set these just in case
 		rp = bufferdp.getPort();
@@ -68,16 +75,7 @@ public abstract class Transport {
 		// * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
 		// This is the intermediate loop
-		TCPpacket toSend;
-		TCPpacket response = null;
-		TCPpacket fin = null;
-		do {
-			toSend = handlePacket(response);
-			sendData(toSend);
-			response = receiveData(toSend);
-
-			fin = toSend.isFin() ? toSend : (response.isFin() ? response : null);
-		} while(fin == null);
+		TCPpacket fin = transferData();
 
 		termConnection(fin);
 		return true;
@@ -193,8 +191,6 @@ public abstract class Transport {
 		return null;
 	}
 
-	public abstract TCPpacket handlePacket(TCPpacket received);
-
 	/**
 	 * The connection should be initialized on return
 	 * if the init is successful, performing
@@ -205,7 +201,7 @@ public abstract class Transport {
 	 */
 	protected abstract DatagramPacket initConnection();
 
-	protected abstract DatagramPacket transferData();
+	protected abstract TCPpacket transferData();
 
 	/**
 	 * After this returns the connection should
