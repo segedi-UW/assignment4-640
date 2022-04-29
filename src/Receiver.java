@@ -66,6 +66,7 @@ public class Receiver extends Transport {
 			socket.receive(data);
 			System.out.println("Recieved");
 			TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
+			System.out.println(prevPacket);
 
 			TCPpacket packet = getInitPacket();
 			// packet.setAck();
@@ -75,7 +76,7 @@ public class Receiver extends Transport {
 			// packet.setCurrentTime();
 			// printPacket(packet);
 
-			DatagramPacket pack = packet.getPacket(data.getAddress(), rp);
+			DatagramPacket pack = packet.getPacket(data.getAddress(), data.getPort());
 			socket.send(pack);
 			printPacket(TCPpacket.deserialize(data.getData()));
 

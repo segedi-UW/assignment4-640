@@ -66,6 +66,7 @@ public class Sender extends Transport {
 		TCPpacket packet = new TCPpacket();
 		packet.setSyn();
 		packet.setSeq(3);
+		packet.setCurrentTime();
 		return packet;
 	}
 
@@ -110,12 +111,10 @@ public class Sender extends Transport {
 	private void initConnection() {
 		TCPpacket p = getInitPacket();
 		try {
-			p.setCurrentTime();
 			DatagramPacket d = p.getPacket(addr, rp);
-			// System.out.println("Sending packet:");
-			// TCPpacket.printPacket(d.getData());
+
 			socket.send(d);
-			// printPacket(TCPpacket.deserialize(d.getData()));
+
 			DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
 			TCPpacket prevPacket = receiveData(data, d);
 
@@ -126,7 +125,7 @@ public class Sender extends Transport {
 			packet.setCurrentTime();
 			d = packet.getPacket(addr, rp);
 			System.out.println("Sending packet2:");
-			TCPpacket.printPacket(d.getData());
+			System.out.println(d);
 			socket.send(d);
 			printPacket(TCPpacket.deserialize(d.getData()));
 		}

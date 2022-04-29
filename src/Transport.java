@@ -27,6 +27,7 @@ public abstract class Transport {
 	final protected List<Byte> buffer;
 	final protected double a = .875;
 	final protected double b = 1 - a;
+	final protected int maxDataSize;
 
 	protected long currentAck;
 	protected DatagramSocket socket;
@@ -45,6 +46,7 @@ public abstract class Transport {
 		this.sws = sws;
 		buffer = new ArrayList<>();
 		this.socket = new DatagramSocket(lp);
+		this.maxDataSize = mtu - 20 - 8 - 24;
 	}
 
 	public boolean transfer() {

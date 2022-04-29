@@ -21,7 +21,7 @@ import java.util.Arrays;
  */
 public class TCPpacket {
 
-	public static int HEADERN = 40;
+	public static int HEADERN = 24;
 	public static int FLAG_ACK = 0x1;
 	public static int FLAG_FIN = 0x2;
 	public static int FLAG_SYN = 0x4;
@@ -69,7 +69,10 @@ public class TCPpacket {
 		p.lengthFlags = buf.getInt();
 		// read the checksum, then set to zero for checksum validation
 		buf.mark();
-		p.checksum = buf.getInt();
+		int ck = buf.getInt();
+		System.out.println("ck = " + ck);
+		p.checksum = ck;
+
 		buf.reset();
 		buf.putInt(0);
 
@@ -78,40 +81,13 @@ public class TCPpacket {
 
 		// verify the checksum
 		int cksm = calcChecksum(buf.duplicate());
+		System.err.println("a: " + p.checksum + " e: " + cksm);
 		if (p.checksum != cksm) {
-			throw new ChecksumException("Checksum was invalid: " + cksm + " != " + p.checksum);
+			System.err.println("Bad packet:");
+			System.err.println(p.toString(src));
+			throw new ChecksumException("Checksum was invalid. Packet chksm = " + p.checksum + " != " + cksm);
 		}
 		return p;
-	}
-
-	public static void printPacket(byte[] data) {
-		ByteBuffer buf = ByteBuffer.wrap(data);
-		StringBuffer sb = new StringBuffer();
-		sb.append("Seq: ").append(buf.getInt()).append('\n');
-		sb.append("Ack: ").append(buf.getInt()).append('\n');
-		sb.append("time: ").append(buf.getLong()).append('\n');
-		long lengthFlags = buf.getInt();
-		long length = lengthFlags >> 3;
-		sb.append("length: ").append(length).append('\n');
-		if ((lengthFlags & FLAG_SYN) > 0)
-			sb.append("S");
-		if ((lengthFlags & FLAG_ACK) > 0)
-			sb.append("A");
-		if ((lengthFlags & FLAG_FIN) > 0)
-			sb.append("F");
-		sb.append('\n');
-		// read the checksum, then set to zero for checksum validation
-		sb.append("chksum: ").append(buf.getInt());
-		sb.append('\n');
-
-		for (long i = 0; i < length; i++) {
-			if (i > 20) {
-				sb.append("\n");
-				i = 0;
-			}
-			sb.append(' ').append(buf.get()).append(' ');
-		}
-		System.out.println(sb.toString());
 	}
 
 	/**
@@ -198,6 +174,7 @@ public class TCPpacket {
 		if(addr == null)
 			throw new NullPointerException("Cannot send to null address");
 		final byte[] packet = serialize();
+		if (packet.length == 0) throw new IllegalStateException("What?!");
 		System.out.println(addr.toString());
 		return new DatagramPacket(packet, packet.length, addr, rp);
 	}
@@ -217,6 +194,7 @@ public class TCPpacket {
 	 *
 	 */
 	public byte[] serialize() {
+		// length is padded when needed - default is 0
 		final int len = HEADERN + data.length + (data.length % 2);
 		ByteBuffer buf = ByteBuffer.allocate(len);
 		buf.putInt(sequenceNumber);
@@ -227,12 +205,11 @@ public class TCPpacket {
 		buf.putInt(0); // placeholder for checksum
 		buf.put(data);
 		// FIXME Do we need to adjust the length to account for the padding? Assuming no for now
-		if (buf.remaining() % 2 == 1)
-			buf.put((byte)0x00); // pad buffer with 1 zeroed byte
 		checksum = calcChecksum(buf.duplicate());
 		buf.reset();    // rewrite at checksum
 		buf.putInt(checksum);
-		return buf.array();
+		byte[] a = buf.array();
+		return a;
 	}
 
 	public void setFlag(int flag) {
@@ -276,6 +253,40 @@ public class TCPpacket {
 	public void clearFlags() {
 		// 0x8 = 1000
 		this.lengthFlags &= 0x8;
+	}
+
+	public String toString(byte[] data) {
+		ByteBuffer buf = ByteBuffer.wrap(data);
+		StringBuffer sb = new StringBuffer();
+		sb.append("Seq: ").append(buf.getInt()).append('\n');
+		sb.append("Ack: ").append(buf.getInt()).append('\n');
+		sb.append("time: ").append(buf.getLong()).append('\n');
+		long lengthFlags = buf.getInt();
+		long length = lengthFlags >> 3;
+		sb.append("length: ").append(length).append('\n');
+		if ((lengthFlags & FLAG_SYN) > 0)
+			sb.append("S");
+		if ((lengthFlags & FLAG_ACK) > 0)
+			sb.append("A");
+		if ((lengthFlags & FLAG_FIN) > 0)
+			sb.append("F");
+		sb.append('\n');
+		// read the checksum, then set to zero for checksum validation
+		sb.append("chksum: ").append(buf.getInt());
+		sb.append('\n');
+
+		for (long i = 0; i < length; i++) {
+			if (i > 20) {
+				sb.append("\n");
+				i = 0;
+			}
+			sb.append(' ').append(buf.get()).append(' ');
+		}
+		return sb.toString();
+	}
+
+	public String toString() {
+		return toString(serialize());
 	}
 
 }
