@@ -72,7 +72,7 @@ public class Receiver extends Transport {
 	}
 
 	@Override
-	protected void termConnection() {
+	protected void termConnection(TCPpacket finPacket) {
 		// FIXME
 	}
 }
