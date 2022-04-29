@@ -29,24 +29,15 @@ public class Receiver extends Transport {
 		return new TCPpacket(); // FIXME 
 	}
 
-	/**
-	 * As per the documentation:
-	 * 1) rcv the init with SYN control bit set 
-	 * and initial sequence number x (ISN) 
-	 *
-	 *    A		| 	  B
-	 *   SYN    |  SYN ACK
-	 *  ISN=x   |   ISN=y
-	 *
-	 * 2) Read, should have SYN set and independent
-	 * ISN; Should have ACK set to indicate the next
-	 * expected byte should contain data with start
-	 * number x + 1
-	 *
-	 * 3) After reading B's ISN and ACK, sends
-	 * final acknowledment segment to B, setting
-	 * the ACK control bit and setting ackNum to y+1,
-	 * indicating the next byte expected is y+1
+	/*
+	 * A            			B
+	 * |						|
+	 * | SYN seq=x ->			|
+	 * |						|
+	 * |   <- SYN seq=y ACK=x+1	| Set ACK and set ackNum to x+1
+	 * | 						|
+	 * | ACK=y+1 ->				|
+	 * |						|
 	 */
 	@Override
 	protected DatagramPacket initConnection() {
