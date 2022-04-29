@@ -97,9 +97,9 @@ public class Sender extends Transport {
 			p.setData(testbuf, 0, rd);
 			DatagramPacket pack = p.getPacket(addr, rp);
 			socket.send(pack);
-			printPacket(p);
+			printPacket(p, true);
 			TCPpacket newPack = TCPpacket.deserialize(pack.getData());
-			printPacket(newPack);
+			printPacket(newPack, false);
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
@@ -115,9 +115,11 @@ public class Sender extends Transport {
 			// System.out.println("Sending packet:");
 			// TCPpacket.printPacket(d.getData());
 			socket.send(d);
-			// printPacket(TCPpacket.deserialize(d.getData()));
+			printPacket(TCPpacket.deserialize(d.getData()), true);
 			DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
 			TCPpacket prevPacket = receiveData(data, d);
+			socket.receive(data);
+			printPacket(prevPacket, false);
 
 			TCPpacket packet = new TCPpacket();
 			packet.setAck();
@@ -126,9 +128,9 @@ public class Sender extends Transport {
 			packet.setCurrentTime();
 			d = packet.getPacket(addr, rp);
 			System.out.println("Sending packet2:");
-			TCPpacket.printPacket(d.getData());
+			// TCPpacket.printPacket(d.getData());
 			socket.send(d);
-			printPacket(TCPpacket.deserialize(d.getData()));
+			printPacket(TCPpacket.deserialize(d.getData()), true);
 		}
 		catch (Exception e){
 			e.printStackTrace();

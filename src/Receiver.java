@@ -34,7 +34,7 @@ public class Receiver extends Transport {
 	public TCPpacket getInitPacket() {
 		TCPpacket packet = new TCPpacket();
 		packet.setSyn();
-		packet.setSeq(3);
+		packet.setSeq(0);
 		return packet;
 		// return null; // should be null as we do not init as receiver
 	}
@@ -45,7 +45,7 @@ public class Receiver extends Transport {
 			socket.receive(data);
 			TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
 			System.out.println("RCVL: " + prevPacket.getDataLen());
-			printPacket(prevPacket);
+			printPacket(prevPacket, false);
 
 			ByteBuffer bb = ByteBuffer.wrap(prevPacket.getData());
 			StringBuffer sb = new StringBuffer("Packet msg:\n");
@@ -64,24 +64,24 @@ public class Receiver extends Transport {
 		try {
 			DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
 			socket.receive(data);
-			System.out.println("Recieved");
+			System.out.println("Received");
 			TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
+			printPacket(prevPacket, false);
 
 			TCPpacket packet = getInitPacket();
-			// packet.setAck();
-			// packet.setSyn();
-			// packet.setAckNum(prevPacket.getSeq()+1);
-			// packet.setSeq(100); // Might need to change to random number
-			// packet.setCurrentTime();
-			// printPacket(packet);
+			packet.setAck();
+			packet.setAckNum(prevPacket.getSeq()+1);
+			packet.setTime(prevPacket.getTime());
 
-			DatagramPacket pack = packet.getPacket(data.getAddress(), rp);
+			DatagramPacket pack = packet.getPacket(data.getAddress(), data.getPort());
+			printPacket(TCPpacket.deserialize(pack.getData()), true);
 			socket.send(pack);
-			printPacket(TCPpacket.deserialize(data.getData()));
 
 			data = new DatagramPacket( new byte[ mtu ], mtu );
-			socket.receive(data);
-			prevPacket = TCPpacket.deserialize(data.getData());
+			// socket.receive(data);
+			prevPacket = receiveData(data, pack);
+			printPacket(prevPacket, false);
+			// prevPacket = TCPpacket.deserialize(data.getData());
 			System.out.println("Connection Initialized");
 
 		} catch (Exception e) {

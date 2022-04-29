@@ -78,6 +78,33 @@ public class TCPpacket {
 
 		// verify the checksum
 		int cksm = calcChecksum(buf.duplicate());
+		// if (p.checksum != cksm) {
+		// 	throw new ChecksumException("Checksum was invalid: " + cksm + " != " + p.checksum);
+		// }
+		System.out.println("Checksum was valid?: " + cksm + " != " + p.checksum);
+		return p;
+	}
+
+	public static TCPpacket deserialize2(byte[] src) throws ChecksumException {
+		TCPpacket p = new TCPpacket();
+		ByteBuffer buf = ByteBuffer.wrap(src);
+		p.sequenceNumber = buf.getInt();
+		System.out.println("Seq: "+ p.sequenceNumber);
+		p.ack = buf.getInt();
+		p.timestamp = buf.getLong();
+		System.out.println("Time: "+ p.timestamp);
+		p.lengthFlags = buf.getInt();
+		// read the checksum, then set to zero for checksum validation
+		buf.mark();
+		p.checksum = buf.getInt();
+		buf.reset();
+		buf.putInt(0);
+
+		p.data = new byte[p.getDataLen()];
+		buf.get(p.data, 0, p.getDataLen());
+
+		// verify the checksum
+		int cksm = calcChecksum(buf.duplicate());
 		if (p.checksum != cksm) {
 			throw new ChecksumException("Checksum was invalid: " + cksm + " != " + p.checksum);
 		}
@@ -198,7 +225,6 @@ public class TCPpacket {
 		final byte[] packet = serialize();
 		if(addr == null)
 			throw new NullPointerException("Cannot send to null address");
-		System.out.println(addr.toString());
 		return new DatagramPacket(packet, packet.length, addr, rp);
 	}
 

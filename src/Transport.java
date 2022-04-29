@@ -69,10 +69,10 @@ public abstract class Transport {
 		return false;
 	}
 
-	public void printPacket(TCPpacket p){
+	public void printPacket(TCPpacket p, boolean sending){
 		// print stuff out here
 		String msg = ""; // Can use a stringbuilder to make this faster
-		if (this instanceof Sender) msg += "snd ";
+		if (sending) msg += "snd ";
 		else msg += "rcv ";
 		msg += p.getTime();
 		if(p.isSyn()) msg += " S";
