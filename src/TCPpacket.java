@@ -10,7 +10,7 @@ import java.util.Arrays;
  * Byte Sequence Number [4]
  * Acknowledgment [4]
  * Timestamp [8]
- * Length | (0 | S | F | A) [4]
+ * Length | S | F | A [4]
  * All zeroes | Checksum (split evenly) [4]
  * Total: 24 bytes
  * Data [specified by length]
@@ -54,11 +54,11 @@ public class TCPpacket {
 	/**
 	 * The timestamp is set on serialization
 	 * Format:
-	 * Byte Sequence Number [8]
-	 * Acknowledgment [8]
+	 * Byte Sequence Number [4]
+	 * Acknowledgment [4]
 	 * Timestamp [8]
-	 * Length | S | F | A) [7.25,0.75]
-	 * All zeroes | Checksum (split evenly) [8]
+	 * Length | S | F | A [4]
+	 * All zeroes | Checksum (split evenly) [4]
 	 */
 	public static TCPpacket deserialize(byte[] src) throws ChecksumException {
 		TCPpacket p = new TCPpacket();
@@ -72,9 +72,6 @@ public class TCPpacket {
 		p.checksum = buf.getInt();
 		buf.reset();
 		buf.putInt(0);
-
-		if (p.getDataLen() > Integer.MAX_VALUE)
-			System.err.println("WARNING: length of data too long to hold in mem.");
 
 		p.data = new byte[p.getDataLen()];
 		buf.get(p.data, 0, p.getDataLen());
@@ -199,9 +196,9 @@ public class TCPpacket {
 
 	public DatagramPacket getPacket(InetAddress addr, int rp) {
 		final byte[] packet = serialize();
-        if(addr == null)
+		if(addr == null)
 			throw new NullPointerException("Cannot send to null address");
-        System.out.println(addr.toString());
+		System.out.println(addr.toString());
 		return new DatagramPacket(packet, packet.length, addr, rp);
 	}
 
@@ -210,13 +207,14 @@ public class TCPpacket {
 	}
 
 	/**
-	 * The timestamp is set on serialization
-	 * Format:
-	 * Byte Sequence Number [8]
-	 * Acknowledgment [8]
+	 * Byte Sequence Number [4]
+	 * Acknowledgment [4]
 	 * Timestamp [8]
-	 * Length | S | F | A) [7.25,0.75]
-	 * All zeroes | Checksum (split evenly) [8]
+	 * Length | S | F | A [3.25,0.75]
+	 * All zeroes | Checksum (split evenly) [4]
+	 * Total: 24 bytes
+	 * Data [specified by length]
+	 *
 	 */
 	public byte[] serialize() {
 		final int len = HEADERN + data.length + (data.length % 2);
