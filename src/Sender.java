@@ -44,20 +44,6 @@ public class Sender extends Transport {
 		initConnection();
 	}
 
-	@Override
-	public TCPpacket handlePacket(TCPpacket p) {
-		// read the file given by filename -> buffer
-		// buffer the next sws number of bytes if 
-		try {
-			if (p.getSeq() == nextBufSeq && reader.available() > 0)
-				bufferWindow();
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			System.exit(1);
-		}
-		return new TCPpacket(); // FIXME, take into account receieved packet p
-	}
-
 	private void bufferWindow() throws IOException {
 		bufn = Math.min(reader.available(), buf.length);
 
@@ -169,7 +155,7 @@ public class Sender extends Transport {
 	}
 
 	@Override
-	protected DatagramPacket transferData() {
+	protected TCPpacket transferData() {
 		int currentSeq = 1;
 		boolean endReached = false;
 		int[] seqs = new int[buffer.length];

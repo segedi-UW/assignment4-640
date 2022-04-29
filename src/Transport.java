@@ -25,8 +25,8 @@ public abstract class Transport {
 	final protected int mtu;   // max transmission unit
 	final protected int sws;    // sliding window size
 	final protected TCPpacket[] buffer;
-	final protected double a = .875;
-	final protected double b = 1 - a;
+	final protected double a = .875;	// timout var
+	final protected double b = 1 - a;	// timeout var
 	final protected int maxDataSize;
 
 	protected int rp; // remote port
@@ -37,8 +37,8 @@ public abstract class Transport {
 	protected boolean connectionInitialized;
 	protected InetAddress addr;
 	protected long timeOut = 5000;
-	protected double ERTT;
-	protected double EDEV;
+	protected double ERTT;	// timeout var
+	protected double EDEV;	// timeout var
 
 	protected Transport(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
 		this.lp = lp;
@@ -59,6 +59,13 @@ public abstract class Transport {
 			System.err.println("Failed to connect");
 			return false;
 		}
+		try {
+			TCPpacket last = TCPpacket.deserialize(bufferdp.getData());
+			currentAck = last.getAckNum();
+		} catch (ChecksumException e) {
+			System.err.println("Bad initConnection() - no readable ack");
+			return false;
+		}
 
 		// Set these just in case
 		rp = bufferdp.getPort();
@@ -68,16 +75,7 @@ public abstract class Transport {
 		// * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
 
 		// This is the intermediate loop
-		TCPpacket toSend;
-		TCPpacket response = null;
-		TCPpacket fin = null;
-		do {
-			toSend = handlePacket(response);
-			sendData(toSend);
-			response = receiveData(toSend);
-
-			fin = toSend.isFin() ? toSend : (response.isFin() ? response : null);
-		} while(fin == null);
+		TCPpacket fin = transferData();
 
 		termConnection(fin);
 		return true;
@@ -193,8 +191,6 @@ public abstract class Transport {
 		return null;
 	}
 
-	public abstract TCPpacket handlePacket(TCPpacket received);
-
 	/**
 	 * The connection should be initialized on return
 	 * if the init is successful, performing
@@ -205,7 +201,7 @@ public abstract class Transport {
 	 */
 	protected abstract DatagramPacket initConnection();
 
-	protected abstract DatagramPacket transferData();
+	protected abstract TCPpacket transferData();
 
 	/**
 	 * After this returns the connection should
