@@ -195,9 +195,9 @@ public class TCPpacket {
 	}
 
 	public DatagramPacket getPacket(InetAddress addr, int rp) {
-		final byte[] packet = serialize();
 		if(addr == null)
 			throw new NullPointerException("Cannot send to null address");
+		final byte[] packet = serialize();
 		System.out.println(addr.toString());
 		return new DatagramPacket(packet, packet.length, addr, rp);
 	}
