@@ -261,6 +261,8 @@ public abstract class Transport {
                 
 				packet.setCurrentTime();
                 d = packet.getPacket(addr, rp);
+				System.out.println("Sending packet2:");
+				TCPpacket.printPacket(d.getData());
                 socket.send(d);
                 printPacket(TCPpacket.deserialize(d.getData()));
             }
@@ -323,8 +325,10 @@ public abstract class Transport {
             try {
                 DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
                 socket.receive(data);
+				System.out.println("Recieved");
                 TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
 
+<<<<<<< HEAD
                 TCPpacket packet = getInitPacket();
                 // packet.setAck();
                 // packet.setSyn();
@@ -335,6 +339,18 @@ public abstract class Transport {
 
                 DatagramPacket pack = packet.getPacket(data.getAddress(), rp);
                 socket.send(pack);
+=======
+                TCPpacket packet = new TCPpacket();
+                packet.setAck();
+                packet.setSyn();
+                packet.setAckNum(prevPacket.getSeq()+1);
+                packet.setSeq(100); // Might need to change to random number
+				packet.setCurrentTime();
+
+                addr = data.getAddress();
+                data = packet.getPacket(addr, rp);
+                socket.send(data);
+>>>>>>> da52d3c9ed5a81c7756e0be86c7713095cf7895f
                 printPacket(TCPpacket.deserialize(data.getData()));
 
                 data = new DatagramPacket( new byte[ mtu ], mtu );

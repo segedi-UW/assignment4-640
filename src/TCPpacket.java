@@ -7,11 +7,12 @@ import java.util.Arrays;
 /**
  * By specification the packet is constructed as follows:
  *
- * Byte Sequence Number [8]
- * Acknowledgment [8]
+ * Byte Sequence Number [4]
+ * Acknowledgment [4]
  * Timestamp [8]
- * Length | (0 | S | F | A) [7, 1]
- * All zeroes | Checksum (split evenly) [8]
+ * Length | (0 | S | F | A) [4]
+ * All zeroes | Checksum (split evenly) [4]
+ * Total: 24 bytes
  * Data [specified by length]
  *
  * The width (each line above) is 8 bytes (64 bits)
@@ -25,11 +26,11 @@ public class TCPpacket {
 	public static int FLAG_FIN = 0x2;
 	public static int FLAG_SYN = 0x4;
 
-	private long sequenceNumber;
-	private long ack;
+	private int sequenceNumber;
+	private int ack;
 	private long timestamp;
-	private long lengthFlags; // need to bit shift left 3 times
-	private long checksum; // first 4 bytes should be 0
+	private int lengthFlags; // need to bit shift left 3 times
+	private int checksum; // first 4 bytes should be 0
 	private byte[] data;
 
 	/**
@@ -62,28 +63,24 @@ public class TCPpacket {
 	public static TCPpacket deserialize(byte[] src) throws ChecksumException {
 		TCPpacket p = new TCPpacket();
 		ByteBuffer buf = ByteBuffer.wrap(src);
-		p.sequenceNumber = buf.getLong();
-		p.ack = buf.getLong();
+		p.sequenceNumber = buf.getInt();
+		p.ack = buf.getInt();
 		p.timestamp = buf.getLong();
-		p.lengthFlags = buf.getLong();
+		p.lengthFlags = buf.getInt();
 		// read the checksum, then set to zero for checksum validation
 		buf.mark();
-		p.checksum = buf.getLong();
+		p.checksum = buf.getInt();
 		buf.reset();
-		buf.putLong(0);
-
-		String tmp = String.format("Remaining (%d)", buf.remaining());
+		buf.putInt(0);
 
 		if (p.getDataLen() > Integer.MAX_VALUE)
 			System.err.println("WARNING: length of data too long to hold in mem.");
 
-		p.data = new byte[(int)p.getDataLen()];
-		buf.get(p.data, 0,(int)p.getDataLen());
+		p.data = new byte[p.getDataLen()];
+		buf.get(p.data, 0, p.getDataLen());
 
-		tmp += String.format(" length (%d)", p.data.length);
-		System.out.println(tmp);
 		// verify the checksum
-		long cksm = calcChecksum(buf.duplicate());
+		int cksm = calcChecksum(buf.duplicate());
 		if (p.checksum != cksm) {
 			throw new ChecksumException("Checksum was invalid: " + cksm + " != " + p.checksum);
 		}
@@ -93,10 +90,10 @@ public class TCPpacket {
 	public static void printPacket(byte[] data) {
 		ByteBuffer buf = ByteBuffer.wrap(data);
 		StringBuffer sb = new StringBuffer();
-		sb.append("Seq: ").append(buf.getLong()).append('\n');
-		sb.append("Ack: ").append(buf.getLong()).append('\n');
+		sb.append("Seq: ").append(buf.getInt()).append('\n');
+		sb.append("Ack: ").append(buf.getInt()).append('\n');
 		sb.append("time: ").append(buf.getLong()).append('\n');
-		long lengthFlags = buf.getLong();
+		long lengthFlags = buf.getInt();
 		long length = lengthFlags >> 3;
 		sb.append("length: ").append(length).append('\n');
 		if ((lengthFlags & FLAG_SYN) > 0)
@@ -107,7 +104,7 @@ public class TCPpacket {
 			sb.append("F");
 		sb.append('\n');
 		// read the checksum, then set to zero for checksum validation
-		sb.append("chksum: ").append(buf.getLong());
+		sb.append("chksum: ").append(buf.getInt());
 		sb.append('\n');
 
 		for (long i = 0; i < length; i++) {
@@ -131,19 +128,19 @@ public class TCPpacket {
 	 * Approach textbook, implemented in java using
 	 * a ByteBuffer.
 	 *
-	 * I return a long integer (8 bytes), but it is wrapped as if it were
+	 * I return an integer (4 bytes), but it is wrapped as if it were
 	 * a 2 byte integer. Thus it returns 6 zero bytes followed by the 2 byte
 	 * checksum.
 	 *
 	 * @see https://book.systemsapproach.org/direct/error.html
 	 */
-	private static long calcChecksum(ByteBuffer buf) {
+	private static int calcChecksum(ByteBuffer buf) {
 		buf.rewind();
 		if (buf.remaining() % 2 == 1) {
 			throw new IllegalStateException("buffer needs to be padded cannot checksum odd length");
 		}
 
-		long sum = 0;
+		int sum = 0;
 		while (buf.hasRemaining()) {
 			sum += buf.getShort();
 			if ((sum & 0xFFFF0000) > 0) { // if carry occured (for a short (2 bytes))
@@ -163,19 +160,19 @@ public class TCPpacket {
 		this.timestamp = time;
 	}
 
-	public void setSeq(long num){
+	public void setSeq(int num){
 		this.sequenceNumber = num;
 	}
 
-	public long getSeq() {
+	public int getSeq() {
 		return this.sequenceNumber;
 	}
 
-	public void setAckNum(long num){
+	public void setAckNum(int num){
 		this.ack = num;
 	}
 
-	public long getAckNum() {
+	public int getAckNum() {
 		return this.ack;
 	}
 
@@ -183,7 +180,7 @@ public class TCPpacket {
 		return this.timestamp;
 	}
 
-	public long getDataLen() {
+	public int getDataLen() {
 		return this.lengthFlags >> 3;
 	}
 
@@ -202,13 +199,9 @@ public class TCPpacket {
 
 	public DatagramPacket getPacket(InetAddress addr, int rp) {
 		final byte[] packet = serialize();
-        System.out.println("\n\n"+addr.toString()+"\n\n");
-        try {
-            System.out.println("\n\n"+InetAddress.getLocalHost()+"\n\n");
-        } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        if(addr == null)
+			throw new NullPointerException("Cannot send to null address");
+        System.out.println(addr.toString());
 		return new DatagramPacket(packet, packet.length, addr, rp);
 	}
 
@@ -225,22 +218,22 @@ public class TCPpacket {
 	 * Length | S | F | A) [7.25,0.75]
 	 * All zeroes | Checksum (split evenly) [8]
 	 */
-	private byte[] serialize() {
+	public byte[] serialize() {
 		final int len = HEADERN + data.length + (data.length % 2);
 		ByteBuffer buf = ByteBuffer.allocate(len);
-		buf.putLong(sequenceNumber);
-		buf.putLong(ack);
+		buf.putInt(sequenceNumber);
+		buf.putInt(ack);
 		buf.putLong(timestamp);
-		buf.putLong(lengthFlags);
+		buf.putInt(lengthFlags);
 		buf.mark();     // position at start of checksum
-		buf.putLong(0); // placeholder for checksum
+		buf.putInt(0); // placeholder for checksum
 		buf.put(data);
 		// FIXME Do we need to adjust the length to account for the padding? Assuming no for now
 		if (buf.remaining() % 2 == 1)
 			buf.put((byte)0x00); // pad buffer with 1 zeroed byte
 		checksum = calcChecksum(buf.duplicate());
 		buf.reset();    // rewrite at checksum
-		buf.putLong(checksum);
+		buf.putInt(checksum);
 		return buf.array();
 	}
 
