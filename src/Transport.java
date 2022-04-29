@@ -54,6 +54,10 @@ public abstract class Transport {
 		// each time loading the packet using the handlePacket method
 		// that is implemented in the Sender and Receiver class
 
+		if (initConnection()) {
+			System.err.println("Failed to connect");
+			return false;
+		}
 
 		// We need to print the following stats, which should be done here:
 		// * <snd/rcv> <time> <flag-list> seq-number> <number of bytes> <ack number>
@@ -71,10 +75,10 @@ public abstract class Transport {
 		return false;
 	}
 
-	public void printPacket(TCPpacket p){
+	public void printPacket(TCPpacket p, boolean isSending){
 		// print stuff out here
 		String msg = ""; // Can use a stringbuilder to make this faster
-		if (this instanceof Sender) msg += "snd ";
+		if (isSending) msg += "snd ";
 		else msg += "rcv ";
 		msg += p.getTime();
 		if(p.isSyn()) msg += " S";
@@ -136,6 +140,7 @@ public abstract class Transport {
 				continue;
 			}
 			catch (Exception e) {
+				System.err.println(e.getMessage());
 				e.printStackTrace();
 			}
 		}
@@ -145,6 +150,6 @@ public abstract class Transport {
 	}
 
 	public abstract TCPpacket handlePacket(TCPpacket p);
-	public abstract TCPpacket getInitPacket();
+	protected abstract boolean initConnection();
 
 }

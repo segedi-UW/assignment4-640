@@ -70,7 +70,6 @@ public class TCPpacket {
 		// read the checksum, then set to zero for checksum validation
 		buf.mark();
 		int ck = buf.getInt();
-		System.out.println("ck = " + ck);
 		p.checksum = ck;
 
 		buf.reset();
@@ -81,12 +80,8 @@ public class TCPpacket {
 
 		// verify the checksum
 		int cksm = calcChecksum(buf.duplicate());
-		System.err.println("a: " + p.checksum + " e: " + cksm);
-		if (p.checksum != cksm) {
-			System.err.println("Bad packet:");
-			System.err.println(p.toString(src));
-			throw new ChecksumException("Checksum was invalid. Packet chksm = " + p.checksum + " != " + cksm);
-		}
+		if (p.checksum != cksm)
+			throw new ChecksumException("Checksum was invalid: " + cksm + " != " + p.checksum);
 		return p;
 	}
 
@@ -204,7 +199,6 @@ public class TCPpacket {
 		buf.mark();     // position at start of checksum
 		buf.putInt(0); // placeholder for checksum
 		buf.put(data);
-		// FIXME Do we need to adjust the length to account for the padding? Assuming no for now
 		checksum = calcChecksum(buf.duplicate());
 		buf.reset();    // rewrite at checksum
 		buf.putInt(checksum);
