@@ -209,6 +209,8 @@ public abstract class Transport {
 	 */
 	protected abstract DatagramPacket initConnection();
 
+	protected abstract DatagramPacket transferData();
+
 	/**
 	 * After this returns the connection should
 	 * be terminated. Perform termination

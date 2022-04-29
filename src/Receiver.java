@@ -6,6 +6,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+
+import javax.xml.crypto.Data;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
@@ -69,6 +72,10 @@ public class Receiver extends Transport {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	protected DatagramPacket transferData() {
+		return null;
 	}
 
 	@Override

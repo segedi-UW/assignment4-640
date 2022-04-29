@@ -114,6 +114,11 @@ public class Sender extends Transport {
 	}
 
 	@Override
+	protected DatagramPacket transferData() {
+		return null;
+	}
+
+	@Override
 	protected void termConnection(TCPpacket finPacket) {
 		// FIXME
 	}
