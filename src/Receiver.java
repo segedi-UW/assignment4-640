@@ -29,44 +29,59 @@ public class Receiver extends Transport {
 		return new TCPpacket(); // FIXME 
 	}
 
-	private TCPpacket getInitPacket() {
-		TCPpacket packet = new TCPpacket();
-		packet.setSyn();
-		packet.setSeq(0);
-		return packet;
-		// return null; // should be null as we do not init as receiver
+	/**
+	 * As per the documentation:
+	 * 1) rcv the init with SYN control bit set 
+	 * and initial sequence number x (ISN) 
+	 *
+	 *    A		| 	  B
+	 *   SYN    |  SYN ACK
+	 *  ISN=x   |   ISN=y
+	 *
+	 * 2) Read, should have SYN set and independent
+	 * ISN; Should have ACK set to indicate the next
+	 * expected byte should contain data with start
+	 * number x + 1
+	 *
+	 * 3) After reading B's ISN and ACK, sends
+	 * final acknowledment segment to B, setting
+	 * the ACK control bit and setting ackNum to y+1,
+	 * indicating the next byte expected is y+1
+	 */
+	@Override
+	protected DatagramPacket initConnection() {
+		try {
+			DatagramPacket bufdp = new DatagramPacket( new byte[ mtu ], mtu );
+			socket.receive(bufdp);
+			System.out.println("Received");
+			TCPpacket init = TCPpacket.deserialize(bufdp.getData());
+
+			TCPpacket initRsp = new TCPpacket();
+			initRsp.setSyn(); 
+			initRsp.setAck();
+			initRsp.setSeq(0);
+			initRsp.setAckNum(init.getSeq()+1);
+			initRsp.setTime(init.getTime());
+
+			sendData(bufdp, initRsp);
+			System.out.println("Sent");
+
+			TCPpacket rspAck = receiveData(bufdp, initRsp);
+			if (!rspAck.isAck() && rspAck.getAckNum() != initRsp.getSeq()+1) {
+				System.out.printf("Ack Expected (%d) != Actual (%d)\n", initRsp.getSeq()+1, rspAck.getAckNum());
+				return null;
+			}
+			System.out.println("Received");
+			System.out.println("Connection Initialized");
+			return bufdp;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override
-	protected boolean initConnection() {
-		try {
-			DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
-			socket.receive(data);
-			System.out.println("Received");
-			TCPpacket prevPacket = TCPpacket.deserialize(data.getData());
-			//printPacket(prevPacket, false);
-
-			TCPpacket packet = getInitPacket();
-			packet.setAck();
-			packet.setAckNum(prevPacket.getSeq()+1);
-			packet.setTime(prevPacket.getTime());
-
-			DatagramPacket pack = packet.getPacket(data.getAddress(), data.getPort());
-			//printPacket(TCPpacket.deserialize(pack.getData()), true);
-			socket.send(pack);
-			System.out.println("Sent");
-
-			data = new DatagramPacket( new byte[ mtu ], mtu );
-			prevPacket = receiveData(data, pack);
-			System.out.println("Received");
-			//printPacket(prevPacket, false);
-			// prevPacket = TCPpacket.deserialize(data.getData());
-			System.out.println("Connection Initialized");
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-		return true;
+	protected void termConnection() {
+		// FIXME
 	}
 }

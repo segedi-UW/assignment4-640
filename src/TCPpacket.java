@@ -165,15 +165,6 @@ public class TCPpacket {
 		setData(Arrays.copyOfRange(data, offset, length));
 	}
 
-	public DatagramPacket getPacket(InetAddress addr, int rp) {
-		if(addr == null)
-			throw new NullPointerException("Cannot send to null address");
-		final byte[] packet = serialize();
-		if (packet.length == 0) throw new IllegalStateException("What?!");
-		System.out.println(addr.toString());
-		return new DatagramPacket(packet, packet.length, addr, rp);
-	}
-
 	public byte[] getData() {
 		return data;
 	}

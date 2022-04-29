@@ -59,14 +59,6 @@ public class Sender extends Transport {
 		return new TCPpacket(); // FIXME, take into account receieved packet p
 	}
 
-	private TCPpacket getInitPacket() {
-		TCPpacket packet = new TCPpacket();
-		packet.setSyn();
-		packet.setSeq(3); // FIXME random within reason - look up details
-		packet.setCurrentTime();
-		return packet;
-	}
-
 	private void bufferWindow() throws IOException {
 		bufn = Math.min(reader.available(), buf.length);
 
@@ -87,7 +79,7 @@ public class Sender extends Transport {
 	 *  ISN=x   |   ISN=y
 	 *
 	 * 2) Read, should have SYN set and independent
-	 * ISN; Should have ACK set to indicate the next
+	 * ISN y; Should have ACK set to indicate the next
 	 * expected byte should contain data with start
 	 * number x + 1
 	 *
@@ -97,37 +89,45 @@ public class Sender extends Transport {
 	 * indicating the next byte expected is y+1
 	 */
 	@Override
-	protected boolean initConnection() {
+	protected DatagramPacket initConnection() {
 		try {
-			TCPpacket p = getInitPacket();
-			DatagramPacket d = p.getPacket(addr, rp);
+			TCPpacket init = new TCPpacket();
+			init.setSyn();
+			init.setSeq(3); // FIXME random within reason - look up details
+			init.setCurrentTime();
+			DatagramPacket bufdp = new DatagramPacket(new byte[mtu], mtu, addr, rp);
 
-			socket.send(d);
+			sendData(bufdp, init);
 			System.out.println("Sent");
-			//printPacket(TCPpacket.deserialize(d.getData()), true);
-			DatagramPacket data = new DatagramPacket( new byte[ mtu ], mtu );
-			//System.out.println("Reading");
+
 			System.out.println("Reading");
-			TCPpacket prevPacket = receiveData(data, d);
+			TCPpacket initRsp = receiveData(bufdp, init);
 			System.out.println("Received packet");
-			//socket.receive(data);
-			//printPacket(prevPacket, false);
+			if (!initRsp.isSyn() || !initRsp.isAck()) {
+				System.err.println("Expected SYN and ACK to be set");
+				return null;
+			} else if (initRsp.getAckNum() != init.getSeq()+1) {
+				System.err.printf("Ack Expected (%d) Actual (%d)\n", init.getSeq()+1, initRsp.getAckNum());
+				return null;
+			}
 
-			TCPpacket packet = new TCPpacket();
-			packet.setAck();
-			packet.setAckNum(prevPacket.getSeq()+1);
-
-			packet.setCurrentTime();
-			d = packet.getPacket(addr, rp);
-			// TCPpacket.printPacket(d.getData());
-			socket.send(d);
-			System.out.println("Sent last");
-			//printPacket(TCPpacket.deserialize(d.getData()), true);
+			TCPpacket rspAck = new TCPpacket();
+			rspAck.setAck();
+			rspAck.setAckNum(initRsp.getSeq()+1);
+			rspAck.setCurrentTime();
+			sendData(bufdp, rspAck);
+			System.out.println("Sent Acknowledgement");
+			// do we need to read in opposing ack?
+			return bufdp;
 		}
 		catch (Exception e){
 			e.printStackTrace();
-			return false;
+			return null;
 		}
-		return true;
+	}
+
+	@Override
+	protected void termConnection() {
+		// FIXME
 	}
 }
