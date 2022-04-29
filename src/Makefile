@@ -9,10 +9,7 @@ rrargs=-p 5000 -m 1500 -c 5 -f intest.txt
 .java.class:
 	$(JC) $(JFLAGS) $*.java
 
-CLASSES = \
-		  TCPend.java \
-		  Transport.java \
-		  Test.java \
+CLASSES = *.java
 
 default: classes
 
