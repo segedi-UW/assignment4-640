@@ -6,6 +6,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+
+import javax.xml.crypto.Data;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
@@ -44,8 +47,8 @@ public class Receiver extends Transport {
 		try {
 			DatagramPacket bufdp = new DatagramPacket( new byte[ mtu ], mtu );
 			socket.receive(bufdp);
-			System.out.println("Received");
 			TCPpacket init = TCPpacket.deserialize(bufdp.getData());
+			printPacket(init, false);
 
 			TCPpacket initRsp = new TCPpacket();
 			initRsp.setSyn(); 
@@ -55,20 +58,24 @@ public class Receiver extends Transport {
 			initRsp.setTime(init.getTime());
 
 			sendData(bufdp, initRsp);
-			System.out.println("Sent");
+			// System.out.println("Sent");
 
 			TCPpacket rspAck = receiveData(bufdp, initRsp);
 			if (!rspAck.isAck() && rspAck.getAckNum() != initRsp.getSeq()+1) {
 				System.out.printf("Ack Expected (%d) != Actual (%d)\n", initRsp.getSeq()+1, rspAck.getAckNum());
 				return null;
 			}
-			System.out.println("Received");
+			// System.out.println("Received");
 			System.out.println("Connection Initialized");
 			return bufdp;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	protected DatagramPacket transferData() {
+		return null;
 	}
 
 	@Override
