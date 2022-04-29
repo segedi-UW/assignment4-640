@@ -78,7 +78,6 @@ public class Receiver extends Transport {
 			socket.send(pack);
 
 			data = new DatagramPacket( new byte[ mtu ], mtu );
-			// socket.receive(data);
 			prevPacket = receiveData(data, pack);
 			printPacket(prevPacket, false);
 			// prevPacket = TCPpacket.deserialize(data.getData());
