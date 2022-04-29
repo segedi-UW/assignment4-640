@@ -25,8 +25,8 @@ public abstract class Transport {
 	final protected int mtu;   // max transmission unit
 	final protected int sws;    // sliding window size
 	final protected TCPpacket[] buffer;
-	final protected double a = .875;
-	final protected double b = 1 - a;
+	final protected double a = .875;	// timout var
+	final protected double b = 1 - a;	// timeout var
 	final protected int maxDataSize;
 
 	protected int rp; // remote port
@@ -37,8 +37,8 @@ public abstract class Transport {
 	protected boolean connectionInitialized;
 	protected InetAddress addr;
 	protected long timeOut = 5000;
-	protected double ERTT;
-	protected double EDEV;
+	protected double ERTT;	// timeout var
+	protected double EDEV;	// timeout var
 
 	protected Transport(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
 		this.lp = lp;
