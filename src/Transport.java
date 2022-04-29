@@ -76,11 +76,7 @@ public abstract class Transport {
 			sendData(toSend);
 			response = receiveData(toSend);
 
-			//fin = toSend.isFin() ? toSend : 
-			if (toSend.isFin())
-				fin = toSend;
-			else if (response.isFin())
-				fin = response;
+			fin = toSend.isFin() ? toSend : (response.isFin() ? response : null);
 		} while(fin == null);
 
 		termConnection(fin);
@@ -127,7 +123,7 @@ public abstract class Transport {
 		return (int) this.timeOut;
 	}
 
-	public void sendData(DatagramPacket indp, TCPpacket p) {
+	protected void sendData(DatagramPacket indp, TCPpacket p) {
 		if (indp == null)
 			throw new NullPointerException("buffer DatagramPacket is not initialized. Likely called sendData(TCPpacket) before or in initConnection()");
 		indp.setData(p.serialize());
@@ -143,7 +139,7 @@ public abstract class Transport {
 	 * NOTE Should only be called after initConnection returns
 	 *
 	 */
-	private void sendData(TCPpacket p) {
+	protected void sendData(TCPpacket p) {
 		if (bufferdp == null)
 			throw new NullPointerException("Channel is not init");
 		sendData(bufferdp, p);
@@ -153,7 +149,7 @@ public abstract class Transport {
 	 * NOTE Should only be called after initConnection returns
 	 *
 	 */
-	private TCPpacket receiveData(TCPpacket out) {
+	protected TCPpacket receiveData(TCPpacket out) {
 		return receiveData(bufferdp, out);
 	}
 
