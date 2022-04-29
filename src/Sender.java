@@ -98,11 +98,77 @@ public class Sender extends Transport {
 		}
 	}
 
+	private boolean fillBuffer(FileInputStream in, int currentSeq, int[] seqs) throws IOException {
+		TCPpacket tmp;
+		byte[] dataBuffer = new byte[maxDataSize];
+		for(int i=0; i<this.buffer.length; i++){
+			if(buffer[i] != null){
+				continue;
+			}
+			int rc = in.read(dataBuffer);
+			if(rc == -1){
+				return true;
+			}
+			tmp = new TCPpacket();
+			tmp.setData(dataBuffer, 0, rc);
+			tmp.setAck();
+			tmp.setAckNum(this.currentAck);
+			tmp.setSeq(currentSeq);
+			seqs[i] = currentSeq;
+			this.buffer[i] = tmp;
+			currentSeq += rc;
+		}
+		return false;
+	}
+
+	private TCPpacket sendBuffer() {
+		for(int i = 0; i<this.buffer.length; i++) {
+			if(buffer[i] == null){
+				continue;
+			}
+			DatagramPacket bufdp = new DatagramPacket(new byte[mtu], mtu, addr, rp);
+			sendData(bufdp, buffer[i]);
+		}
+		DatagramPacket bufdp = new DatagramPacket(new byte[mtu], mtu, addr, rp);
+		return receiveData(bufdp, buffer[0]);
+	}
+
+	private void moveBufferWindow(int[] seqs, int ackNum) {
+		for(int i = 0; i<seqs.length; i++){
+			if (seqs[i]==ackNum){
+				moveWindow(i);
+			}
+		}
+	}
+
+	private void moveWindow(int toFree) {
+		int ind = 0;
+		for(int i = toFree; i<buffer.length;i++){
+			buffer[ind] = buffer[i];
+			ind += 1;
+		}
+		while(ind < buffer.length){
+			buffer[ind] = null;
+			ind += 1;
+		}
+	}
+
 	@Override
 	protected TCPpacket transferData() {
-		TCPpacket p = new TCPpacket();
-		p.setFin();
-		sendData(p);
+		int currentSeq = 1;
+		boolean endReached = false;
+		int[] seqs = new int[buffer.length];
+		try (FileInputStream in = new FileInputStream(this.filename);) {
+			while(!endReached){
+				endReached = fillBuffer(in, currentSeq, seqs);
+				TCPpacket incoming = sendBuffer();
+				this.currentAck = incoming.getSeq() + 1;
+				moveBufferWindow(seqs, incoming.getAckNum());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 		return null;
 	}
 
