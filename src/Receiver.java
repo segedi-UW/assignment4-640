@@ -112,25 +112,35 @@ public class Receiver extends Transport {
 	}
 
 	protected TCPpacket transferData() {
-		TCPpacket rcv = null;
-		try (FileOutputStream out = new FileOutputStream(filename, true)) {
-			TCPpacket lastAck = new TCPpacket();
-			TCPpacket fin = null;
-			lastAck.setAckNum(currentAck);
-			while (!(rcv = receiveData(lastAck)).isFin()) { // while not fin packet
-				fin = handlePacket(rcv);
-				if (fin != null) return fin;
-				fin = readAll(); // proceses all until fin packet
-				if (fin != null) return fin;
+		DatagramPacket buf = new DatagramPacket(new byte[mtu], mtu);
+		while(true){
+			try {
+				socket.receive(buf);
+				TCPpacket p = TCPpacket.deserialize(buf.getData());
+				printPacket(p, false);
+			} catch (Exception e) {
+				//TODO: handle exception
 			}
-		} catch (IOException e) {
-			System.err.println("Failed to write to file: " + e.getMessage());
 		}
+		// TCPpacket rcv = null;
+		// try (FileOutputStream out = new FileOutputStream(filename, true)) {
+		// 	TCPpacket lastAck = new TCPpacket();
+		// 	TCPpacket fin = null;
+		// 	lastAck.setAckNum(currentAck);
+		// 	while (!(rcv = receiveData(lastAck)).isFin()) { // while not fin packet
+		// 		fin = handlePacket(rcv);
+		// 		if (fin != null) return fin;
+		// 		fin = readAll(); // proceses all until fin packet
+		// 		if (fin != null) return fin;
+		// 	}
+		// } catch (IOException e) {
+		// 	System.err.println("Failed to write to file: " + e.getMessage());
+		// }
 
-		if (!rcv.isFin())
-			throw new IllegalStateException("Terminated before fin packet!");
+		// if (!rcv.isFin())
+		// 	throw new IllegalStateException("Terminated before fin packet!");
 
-		return rcv;
+		// return rcv;
 	}
 
 	@Override
