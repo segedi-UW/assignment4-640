@@ -101,8 +101,7 @@ public abstract class Transport {
 	}
 
 	public void printPacket(TCPpacket p, boolean isSending){
-		// print stuff out here
-		String msg = ""; // Can use a stringbuilder to make this faster
+		String msg = ""; 
 		if (isSending) msg += "snd ";
 		else msg += "rcv ";
 		msg += p.getTime();
