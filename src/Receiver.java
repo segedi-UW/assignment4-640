@@ -108,10 +108,16 @@ public class Receiver extends Transport {
 		ByteBuffer buf = ByteBuffer.allocate(maxDataSize + TCPpacket.HEADERN);
 		TCPpacket p;
 		channel.configureBlocking(false);
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			// do nothing
+		}
 		while (channel.receive(buf) != null) {
 			try {
 				buf.flip();
 				p = TCPpacket.deserialize(buf.array());
+				printPacket(p, false);
 				p = handlePacket(p, out);
 				if (p != null) {
 					channel.configureBlocking(true);
