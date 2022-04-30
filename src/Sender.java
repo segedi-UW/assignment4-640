@@ -28,8 +28,6 @@ public class Sender extends Transport {
 	public Sender(int lp, int rp, String rip, String filename, int mtu, int sws) throws SocketException {
 		super(lp, rp, filename, mtu, sws);
 		this.rip = rip;
-		this.isSender = true;
-		connectionInitialized = false;
 		try {
 			this.addr = InetAddress.getByName(rip);
 			buf = new byte[sws];
