@@ -86,6 +86,9 @@ public class TCPpacket {
 		buf.get(p.data, 0, p.getDataLen());
 
 		// verify the checksum
+		if (p.getDataLen() % 2 == 1)
+			buf.get();
+		buf.flip();
 		int cksm = calcChecksum(buf.duplicate());
 		if (p.checksum != cksm)
 			throw new ChecksumException("Checksum was invalid: " + cksm + " != " + p.checksum);
