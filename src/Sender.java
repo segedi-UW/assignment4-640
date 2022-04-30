@@ -110,7 +110,6 @@ public class Sender extends Transport {
 			}
 			int rc = in.read(dataBuffer);
 			if(rc == -1){
-				System.out.println("End REACHED");
 				return true;
 			}
 			tmp = new TCPpacket();
@@ -159,7 +158,8 @@ public class Sender extends Transport {
 				e.printStackTrace();
 			}
 		}
-		return receiveData(buffer[0]);
+		TCPpacket incoming = receiveDataTransfer(buffer[0]);
+		return incoming;
 	}
 
 	private void moveBufferWindow(int[] seqs, int ackNum) {
