@@ -18,6 +18,7 @@ public class Sender extends Transport {
 	private byte[] buf;
 	private int bufn;
 	private int nextBufSeq;
+	private int currentSeq;
 	// ArrayList buffer (protected)
 	// constructor fields (protected)
 	// Udp Socket (protected)
@@ -98,7 +99,7 @@ public class Sender extends Transport {
 		}
 	}
 
-	private boolean fillBuffer(FileInputStream in, int currentSeq, int[] seqs) throws IOException {
+	private boolean fillBuffer(FileInputStream in, int[] seqs) throws IOException {
 		TCPpacket tmp;
 		byte[] dataBuffer = new byte[maxDataSize];
 		for(int i=0; i<this.buffer.length; i++){
@@ -175,12 +176,12 @@ public class Sender extends Transport {
 	@Override
 	protected TCPpacket transferData() {
 		System.out.println("Starting Transfer");
-		int currentSeq = 1;
+		currentSeq = 1;
 		boolean endReached = false;
 		int[] seqs = new int[buffer.length];
 		try (FileInputStream in = new FileInputStream(this.filename);) {
 			while(!endReached){
-				endReached = fillBuffer(in, currentSeq, seqs);
+				endReached = fillBuffer(in, seqs);
 				TCPpacket incoming = sendBuffer();
 				System.out.println("Incoming ACK: "+ incoming.getAckNum());
 				moveBufferWindow(seqs, incoming.getAckNum());
