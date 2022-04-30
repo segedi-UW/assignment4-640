@@ -124,17 +124,17 @@ public class Sender extends Transport {
 			tmp.setSeq(currentSeq);
 			seqs[i] = currentSeq;
 			this.buffer[i] = tmp;
-			if(rc == 155){
-				DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
-				dpBuf.setData(tmp.serialize());
-				System.out.println(dpBuf.getLength());
-				try {
-					System.out.println(TCPpacket.deserialize(dpBuf.getData()).toString());
-				} catch (SerialException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			// if(rc == 155){
+			// 	DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
+			// 	dpBuf.setData(tmp.serialize());
+			// 	System.out.println(dpBuf.getLength());
+			// 	try {
+			// 		System.out.println(TCPpacket.deserialize(dpBuf.getData()).toString());
+			// 	} catch (SerialException e) {
+			// 		// TODO Auto-generated catch block
+			// 		e.printStackTrace();
+			// 	}
+			// }
 			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
 		}
@@ -147,6 +147,17 @@ public class Sender extends Transport {
 				continue;
 			}
 			buffer[i].setCurrentTime();
+			if(buffer[i].getSeq() == 94121){
+				DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
+				dpBuf.setData(buffer[i].serialize());
+				System.out.println(dpBuf.getLength());
+				try {
+					System.out.println(TCPpacket.deserialize(dpBuf.getData()).toString());
+				} catch (SerialException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 			sendData(buffer[i]);
 			DatagramPacket buf = new DatagramPacket(new byte[mtu], mtu);
 			buf.setData(buffer[i].serialize());
