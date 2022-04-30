@@ -148,6 +148,7 @@ public abstract class Transport {
 			throw new NullPointerException("buffer DatagramPacket is not initialized. Likely called sendData(TCPpacket) before or in initConnection()");
 		indp.setData(p.serialize());
 		try {
+
 			socket.send(indp);
 			printPacket(p, true);
 		} catch (IOException e) {
