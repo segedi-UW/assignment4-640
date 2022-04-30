@@ -206,6 +206,7 @@ public abstract class Transport {
 				continue;
 			}
 			catch (Exception e) {
+				System.out.println(indp.getLength());
 				System.err.println(e.getMessage());
 				e.printStackTrace();
 			}

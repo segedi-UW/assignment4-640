@@ -268,8 +268,10 @@ public class TCPpacket {
 		// read the checksum, then set to zero for checksum validation
 		sb.append("chksum: ").append(buf.getInt());
 		sb.append('\n');
+		System.out.println("Length: " + length);
+		System.out.println("remaining: " + buf.remaining());
 
-		for (long i = 0; i < length; i++) {
+		for (long i = 0; i < length && buf.hasRemaining(); i++) {
 			if (i > 20) {
 				sb.append("\n");
 				i = 0;
