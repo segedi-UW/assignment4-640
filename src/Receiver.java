@@ -139,7 +139,7 @@ public class Receiver extends Transport {
 				for (int bi = bufferIndex(currentAck); bi < buffer.length; bi++) {
 					if (buffer[bi] != null) {
 						currentAck += buffer[bi].getData().length;
-					}
+					} else break;
 				}
 
 				System.out.printf("CAck (%d) CWin (%d)\n", currentAck, currentWindow);

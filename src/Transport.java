@@ -208,6 +208,7 @@ public abstract class Transport {
 			}
 			catch (Exception e) {
 				System.out.println(indp.getLength());
+				System.out.println(TCPpacket.toString(indp.getData()));
 				System.err.println(e.getMessage());
 				e.printStackTrace();
 			}
