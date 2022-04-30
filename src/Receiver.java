@@ -141,6 +141,6 @@ public class Receiver extends Transport {
 
 	@Override
 	protected void termConnection(TCPpacket finPacket) {
-		// FIXME
+		// TCPpacket 
 	}
 }
