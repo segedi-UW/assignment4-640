@@ -16,10 +16,10 @@ public class Receiver extends Transport {
 	// ArrayList buffer (protected)
 	// constructor fields (protected)
 	// UDP Socket (protected)
+	private long currentAckTimestamp;
 
 	public Receiver(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
 		super(lp, rp, filename, mtu, sws);
-		this.isSender = false; // FIXME why do we check this? in this class we know we are not?
 	}
 
 	/*
@@ -97,6 +97,8 @@ public class Receiver extends Transport {
 			data = buffer[c].getData();
 			out.write(data);
 			currentAck += data.length;
+			currentAckTimestamp = buffer[c].getTime();
+			buffer[c] = null;
 		}
 		// reorder remaining bytes
 		for (int i = 0; c < buffer.length; i++, c++)
@@ -136,6 +138,7 @@ public class Receiver extends Transport {
 		try (FileOutputStream out = new FileOutputStream(filename, true)) {
 			TCPpacket lastAck = new TCPpacket();
 			TCPpacket fin = null;
+			lastAck.setSeq(currentAck);
 			lastAck.setAckNum(currentAck);
 			lastAck.setAck();
 			while (!(rcv = receiveData(lastAck)).isFin()) {
@@ -143,6 +146,7 @@ public class Receiver extends Transport {
 				if (fin == null)
 					fin = readAll(out);
 
+				lastAck.setTime(currentAckTimestamp);
 				lastAck.setAckNum(currentAck);
 				sendData(lastAck);
 			}

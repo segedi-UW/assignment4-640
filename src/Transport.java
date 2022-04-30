@@ -38,8 +38,6 @@ public abstract class Transport {
 	protected int currentAck;
 	protected DatagramSocket socket;
 	protected DatagramChannel channel;
-	protected boolean isSender;
-	protected boolean connectionInitialized;
 	protected InetAddress addr;
 	protected long timeOut = 5000;
 	protected double ERTT;	// timeout var
@@ -180,7 +178,7 @@ public abstract class Transport {
 		try {
 			int to = getTimeOut();
 			socket.setSoTimeout(5000);
-			//System.out.println("timeout: " + to);
+			System.out.println("timeout: " + to);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
