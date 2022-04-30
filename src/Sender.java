@@ -116,9 +116,7 @@ public class Sender extends Transport {
 				byte[] tmpBuffer = new byte[rc];
 				tmpBuffer = Arrays.copyOf(dataBuffer, rc);
 				dataBuffer = tmpBuffer;
-				for(int x =0;x<dataBuffer.length;x++){
-					System.out.println("At index:"+x+ ":"+ dataBuffer[x]);
-				}
+
 			}
 			tmp = new TCPpacket();
 			tmp.setData(dataBuffer, 0, rc);

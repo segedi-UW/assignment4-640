@@ -28,7 +28,7 @@ public class TCPpacket {
 	private int ack;
 	private long timestamp;
 	private int lengthFlags; // need to bit shift left 3 times
-	private int checksum; // first 4 bytes should be 0
+	private short checksum; // first 4 bytes should be 0
 	private byte[] data;
 
 	/**
@@ -70,12 +70,13 @@ public class TCPpacket {
 		p.timestamp = buf.getLong();
 		p.lengthFlags = buf.getInt();
 		// read the checksum, then set to zero for checksum validation
+		buf.getShort();
 		buf.mark();
-		int ck = buf.getInt();
+		short ck = buf.getShort();
 		p.checksum = ck;
 
 		buf.reset();
-		buf.putInt(0);
+		buf.putShort((short) 0);
 
 		p.data = new byte[p.getDataLen()];
 		if (buf.remaining() < p.getDataLen()) {
@@ -108,7 +109,7 @@ public class TCPpacket {
 	 *
 	 * @see https://book.systemsapproach.org/direct/error.html
 	 */
-	private static int calcChecksum(ByteBuffer buf) {
+	private static short calcChecksum(ByteBuffer buf) {
 		buf.rewind();
 		if (buf.remaining() % 2 == 1) {
 			throw new IllegalStateException("buffer needs to be padded cannot checksum odd length");
@@ -123,7 +124,40 @@ public class TCPpacket {
 				sum++;
 			}
 		}
-		return ~(sum & 0xFFFF);
+		return (short) ~(sum & 0xFFFF);
+	}
+
+	public static String toString(byte[] data) {
+		ByteBuffer buf = ByteBuffer.wrap(data);
+		StringBuffer sb = new StringBuffer();
+		sb.append("Seq: ").append(buf.getInt()).append('\n');
+		sb.append("Ack: ").append(buf.getInt()).append('\n');
+		sb.append("time: ").append(buf.getLong()).append('\n');
+		long lengthFlags = buf.getInt();
+		long length = lengthFlags >> 3;
+		sb.append("length: ").append(length).append('\n');
+		if ((lengthFlags & FLAG_SYN) > 0)
+			sb.append("S");
+		if ((lengthFlags & FLAG_ACK) > 0)
+			sb.append("A");
+		if ((lengthFlags & FLAG_FIN) > 0)
+			sb.append("F");
+		sb.append('\n');
+		// read the checksum, then set to zero for checksum validation
+		buf.getShort(); // get rid of zeroes
+		sb.append("chksum: ").append(buf.getShort());
+		sb.append('\n');
+		System.out.println("Length: " + length);
+		System.out.println("remaining: " + buf.remaining());
+
+		for (int i = 0, it = 0; it < length; i++, it++) {
+			if (i > 20) {
+				sb.append("\n");
+				i = 0;
+			}
+			sb.append(' ').append(buf.get()).append(' ');
+		}
+		return sb.toString();
 	}
 
 	public void setCurrentTime() {
@@ -197,12 +231,13 @@ public class TCPpacket {
 		buf.putInt(ack);
 		buf.putLong(timestamp);
 		buf.putInt(lengthFlags);
+		buf.putShort((short)0);
 		buf.mark();     // position at start of checksum
-		buf.putInt(0); // placeholder for checksum
+		buf.putShort((short)0); // placeholder for checksum
 		buf.put(data);
 		checksum = calcChecksum(buf.duplicate());
 		buf.reset();    // rewrite at checksum
-		buf.putInt(checksum);
+		buf.putShort(checksum);
 		return buf.array();
 	}
 
@@ -249,35 +284,6 @@ public class TCPpacket {
 		this.lengthFlags &= 0x8;
 	}
 
-	public String toString(byte[] data) {
-		ByteBuffer buf = ByteBuffer.wrap(data);
-		StringBuffer sb = new StringBuffer();
-		sb.append("Seq: ").append(buf.getInt()).append('\n');
-		sb.append("Ack: ").append(buf.getInt()).append('\n');
-		sb.append("time: ").append(buf.getLong()).append('\n');
-		long lengthFlags = buf.getInt();
-		long length = lengthFlags >> 3;
-		sb.append("length: ").append(length).append('\n');
-		if ((lengthFlags & FLAG_SYN) > 0)
-			sb.append("S");
-		if ((lengthFlags & FLAG_ACK) > 0)
-			sb.append("A");
-		if ((lengthFlags & FLAG_FIN) > 0)
-			sb.append("F");
-		sb.append('\n');
-		// read the checksum, then set to zero for checksum validation
-		sb.append("chksum: ").append(buf.getInt());
-		sb.append('\n');
-
-		for (long i = 0; i < length; i++) {
-			if (i > 20) {
-				sb.append("\n");
-				i = 0;
-			}
-			sb.append(' ').append(buf.get()).append(' ');
-		}
-		return sb.toString();
-	}
 
 	public String toString() {
 		return toString(serialize());

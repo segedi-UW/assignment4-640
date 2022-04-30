@@ -65,8 +65,8 @@ public class Receiver extends Transport {
 	}
 
 	private TCPpacket handlePacket(TCPpacket p) {
-		if (p == null) return null;
 		System.out.println("Seq: " + p.getSeq());
+		if (p == null) return null;
 		if (p.getSeq() > currentWindow + maxDataSize * sws)
 			return null; // outside of window
 		if (p.getSeq() < currentAck) return null; // already read
@@ -119,8 +119,7 @@ public class Receiver extends Transport {
 	}
 
 	private int bufferIndex(int seq) {
-		System.out.println("bi: " + (seq / (maxDataSize + currentAck - currentWindow))); 
-		return seq / (maxDataSize + currentAck - currentWindow);
+		return (seq - currentWindow) / (maxDataSize + currentAck - currentWindow);
 	}
 
 	protected TCPpacket transferData() {
@@ -140,7 +139,7 @@ public class Receiver extends Transport {
 				for (int bi = bufferIndex(currentAck); bi < buffer.length; bi++) {
 					if (buffer[bi] != null) {
 						currentAck += buffer[bi].getData().length;
-					}
+					} else break;
 				}
 
 				System.out.printf("CAck (%d) CWin (%d)\n", currentAck, currentWindow);
