@@ -144,9 +144,16 @@ public class Sender extends Transport {
 	}
 
 	private void moveBufferWindow(int[] seqs, int ackNum) {
+		boolean found = false;
 		for(int i = 0; i<seqs.length; i++){
 			if (seqs[i]==ackNum){
 				moveWindow(i);
+				found = true;
+			}
+		}
+		if(found == false) {
+			for(int i = 0; i<buffer.length; i++) {
+				buffer[i] = null;
 			}
 		}
 	}

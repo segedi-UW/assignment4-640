@@ -65,8 +65,8 @@ public class Receiver extends Transport {
 	}
 
 	private TCPpacket handlePacket(TCPpacket p) {
-		System.out.println("Seq: " + p.getSeq());
 		if (p == null) return null;
+		System.out.println("Seq: " + p.getSeq());
 		if (p.getSeq() > currentWindow + maxDataSize * sws)
 			return null; // outside of window
 		if (p.getSeq() < currentAck) return null; // already read
