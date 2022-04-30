@@ -18,8 +18,6 @@ public class Sender extends Transport {
 	private FileInputStream reader;
 	private byte[] buf;
 	private int bufn;
-	private int nextBufSeq;
-	private int currentSeqAcks;
 	private int rightWindowSize;
 	// ArrayList buffer (protected)
 	// constructor fields (protected)
@@ -42,15 +40,6 @@ public class Sender extends Transport {
 			e.printStackTrace();
 			System.exit(1);
 		} 
-	}
-
-	private void bufferWindow() throws IOException {
-		bufn = Math.min(reader.available(), buf.length);
-
-		for (int i = 0; i < bufn; i++)
-			buf[i] = (byte) reader.read();
-
-		nextBufSeq += sws;
 	}
 
 	/*
@@ -118,20 +107,8 @@ public class Sender extends Transport {
 			seqs[i] = currentSeq;
 			rightWindowSize = Math.max(currentSeq + rc, rightWindowSize);
 			this.buffer[i] = tmp;
-			// if(rc == 155){
-			// 	DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
-			// 	dpBuf.setData(tmp.serialize());
-			// 	System.out.println(dpBuf.getLength());
-			// 	try {
-			// 		System.out.println(TCPpacket.deserialize(dpBuf.getData()).toString());
-			// 	} catch (SerialException e) {
-			// 		// TODO Auto-generated catch block
-			// 		e.printStackTrace();
-			// 	}
-			// }
 			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
-			currentSeqAcks = 0;
 		}
 		return false;
 	}

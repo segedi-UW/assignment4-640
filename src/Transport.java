@@ -43,6 +43,7 @@ public abstract class Transport {
 	protected long timeOut = 5000;
 	protected double ERTT;	// timeout var
 	protected double EDEV;	// timeout var
+	protected int packetsTransferred = 0;
 
 	protected Transport(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
 		this.lp = lp;
@@ -116,6 +117,7 @@ public abstract class Transport {
 		else msg += " - ";
 		msg += p.getSeq() + " " + p.getDataLen() + " " + p.getAckNum();
 		System.out.println(msg); 
+		packetsTransferred += 1;
 	}
 
 	private void updateTimeOut(TCPpacket p) {
