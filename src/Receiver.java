@@ -71,7 +71,6 @@ public class Receiver extends Transport {
 	 * an ack.
 	 */
 	private TCPpacket handlePacket(TCPpacket p, FileOutputStream out) throws IOException {
-		System.out.println("Seq: " + p.getSeq());
 		if (p == null) return null;
 		if (p.getSeq() > currentAck + maxDataSize * sws)
 			return null; // outside of window
@@ -104,40 +103,27 @@ public class Receiver extends Transport {
 			buffer[i] = buffer[c];
 	}
 
-	private TCPpacket readAll(FileOutputStream out) {
+	private TCPpacket readAll(FileOutputStream out) throws IOException {
 		ByteBuffer buf = ByteBuffer.allocate(maxDataSize + TCPpacket.HEADERN);
 		TCPpacket p;
-		try {
-			channel.configureBlocking(false);
-		} catch (IOException e) {
-			System.err.println("Failed to configure to non-blocking channel");
-			System.exit(1);
-		}
-		try {
-			while (channel.receive(buf) != null) {
-				try {
-					buf.flip();
-					p = TCPpacket.deserialize(buf.array());
-					if (p.isFin()) return p;
-					handlePacket(p, out);
-				} catch (SerialException e) {
-					System.out.println("Bad Checksum");
-					continue;
-				} finally {
-					buf.clear();
-				}
-			}
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			throw new IllegalStateException("Failed to read channel");
-		} finally {
+		channel.configureBlocking(false);
+		while (channel.receive(buf) != null) {
 			try {
-				channel.configureBlocking(true);
-			} catch (IOException e) {
-				System.err.println("Failed to reconfigure to blocking channel");
-				System.exit(1);
+				buf.flip();
+				p = TCPpacket.deserialize(buf.array());
+				p = handlePacket(p, out);
+				if (p != null) {
+					channel.configureBlocking(true);
+					return p;
+				}
+			} catch (SerialException e) {
+				System.out.println("Bad Checksum");
+				continue;
+			} finally {
+				buf.clear();
 			}
 		}
+		channel.configureBlocking(true);
 		return null;
 	}
 

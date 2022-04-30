@@ -97,7 +97,7 @@ public abstract class Transport {
 
 		TCPpacket fin = transferData();
 
-		// termConnection(fin);
+		termConnection(fin);
 		return true;
 	}
 

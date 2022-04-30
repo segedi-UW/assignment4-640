@@ -20,6 +20,7 @@ public class Sender extends Transport {
 	private int bufn;
 	private int nextBufSeq;
 	private int currentSeq;
+	private int currentSeqAcks;
 	// ArrayList buffer (protected)
 	// constructor fields (protected)
 	// Udp Socket (protected)
@@ -112,12 +113,6 @@ public class Sender extends Transport {
 				System.out.println("End REACHED");
 				return true;
 			}
-			if(rc != maxDataSize){
-				byte[] tmpBuffer = new byte[rc];
-				tmpBuffer = Arrays.copyOf(dataBuffer, rc);
-				dataBuffer = tmpBuffer;
-
-			}
 			tmp = new TCPpacket();
 			tmp.setData(dataBuffer, 0, rc);
 			tmp.setAck();
@@ -138,6 +133,7 @@ public class Sender extends Transport {
 			// }
 			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
+			currentSeqAcks = 0;
 		}
 		return false;
 	}
@@ -151,13 +147,6 @@ public class Sender extends Transport {
 			if(buffer[i].getSeq() == 94121){
 				DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
 				dpBuf.setData(buffer[i].serialize());
-				System.out.println(dpBuf.getLength());
-				try {
-					System.out.println(TCPpacket.deserialize(dpBuf.getData()).toString());
-				} catch (SerialException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 			}
 			sendData(buffer[i]);
 			DatagramPacket buf = new DatagramPacket(new byte[mtu], mtu);
@@ -167,7 +156,6 @@ public class Sender extends Transport {
 				tmp = TCPpacket.deserialize(buf.getData());
 				printPacket(tmp, true);
 			} catch (SerialException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
