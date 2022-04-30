@@ -2,6 +2,7 @@ JFLAGS = -g
 JC = javac
 rsargs=-p 4700 -s localhost -a 5000 -f test.txt -m 1500 -c 5
 rrargs=-p 5000 -m 1500 -c 5 -f intest.txt
+minisargs=-p 4700 -s 10.130.180.21 -a 5000 -f test.txt -m 1500 -c 5
 
 
 .SUFFIXES: .java .class
@@ -20,6 +21,9 @@ snd : classes
 
 rcv : classes
 	java -ea TCPend $(rrargs)
+
+sndMini : classes
+	java -ea TCPend $(minisargs)
 
 test : classes
 	java Test
