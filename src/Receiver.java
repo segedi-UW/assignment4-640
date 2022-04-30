@@ -85,6 +85,7 @@ public class Receiver extends Transport {
 			System.exit(1);
 		}
 		try {
+			System.out.println("Reading All");
 			while (channel.receive(buf) != null) {
 				try {
 					buf.flip();
@@ -119,11 +120,13 @@ public class Receiver extends Transport {
 			TCPpacket lastAck = new TCPpacket();
 			TCPpacket fin = null;
 			lastAck.setAckNum(currentAck);
+			System.out.println("Starting transferData() in Receiver");
 			while (!(rcv = receiveData(lastAck)).isFin()) { // while not fin packet
+				System.out.println("Read unblocked");
 				fin = handlePacket(rcv);
 				if (fin != null) return fin;
-				fin = readAll(); // proceses all until fin packet
-				if (fin != null) return fin;
+				//fin = readAll(); // proceses all until fin packet
+				//if (fin != null) return fin;
 				System.out.println("Blocking");
 			}
 		} catch (IOException e) {

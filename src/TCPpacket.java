@@ -57,6 +57,7 @@ public class TCPpacket {
 	 * Timestamp [8]
 	 * Length | S | F | A [4]
 	 * All zeroes | Checksum (split evenly) [4]
+	 * Data [Length]
 	 */
 	public static TCPpacket deserialize(byte[] src) throws SerialException {
 		TCPpacket p = new TCPpacket();
@@ -158,16 +159,16 @@ public class TCPpacket {
 	}
 
 	public void setData(byte[] data) {
-		this.data = Arrays.copyOf(data, data.length);
+		setData(data, 0, data.length);
+	}
+
+	public void setData(byte[] d, int offset, int length) {
+		this.data = Arrays.copyOfRange(d, offset, length);
 		long flags = this.lengthFlags & 0x7; // 0x7 = 0111
-		this.lengthFlags = data.length;
+		this.lengthFlags = this.data.length;
 		this.lengthFlags = this.lengthFlags << 3;
 		// reset the flags
 		this.lengthFlags += flags; 
-	}
-
-	public void setData(byte[] data, int offset, int length) {
-		setData(Arrays.copyOfRange(data, offset, length)); // FIXME this results in two copies - unecessaary, refactor
 	}
 
 	public byte[] getData() {
