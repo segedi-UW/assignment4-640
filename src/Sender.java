@@ -6,6 +6,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
@@ -109,6 +110,11 @@ public class Sender extends Transport {
 			int rc = in.read(dataBuffer);
 			if(rc == -1){
 				return true;
+			}
+			if(rc != maxDataSize){
+				byte[] tmpBuffer = new byte[rc];
+				tmpBuffer = Arrays.copyOf(dataBuffer, rc);
+				dataBuffer = tmpBuffer;
 			}
 			tmp = new TCPpacket();
 			tmp.setData(dataBuffer, 0, rc);
