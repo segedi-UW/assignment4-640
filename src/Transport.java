@@ -1,5 +1,6 @@
 import java.util.List;
 
+import java.net.StandardSocketOptions;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.nio.channels.DatagramChannel;
@@ -33,6 +34,7 @@ public abstract class Transport {
 
 	protected int rp; // remote port
 	private DatagramPacket bufferdp;
+	private byte[] arraydp;
 	protected int currentAck;
 	protected int currentWindow;
 	protected DatagramSocket socket;
@@ -51,15 +53,22 @@ public abstract class Transport {
 		this.mtu = mtu;
 		this.sws = sws;
 		this.buffer = new TCPpacket[sws];
+		this.maxDataSize = mtu - 20 - 8 - 24; // includes our header, used to split file into chunks
+		arraydp = new byte[mtu - 20 - 8]; // does not include our header!
 		try {
 			this.channel = DatagramChannel.open();
 			this.socket = channel.socket();
 			this.socket.bind(new InetSocketAddress(lp));
+			if (this.socket.getSendBufferSize() < mtu * 10)
+				this.channel.setOption(StandardSocketOptions.SO_SNDBUF, mtu * 10);
+			if (this.socket.getReceiveBufferSize() < mtu * 10)
+				this.channel.setOption(StandardSocketOptions.SO_RCVBUF, mtu * 10);
+			System.out.println("snd buffer size: " + this.socket.getSendBufferSize());
+			System.out.println("rcv buffer size: " + this.socket.getReceiveBufferSize());
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);
 		}
-		this.maxDataSize = mtu - 20 - 8 - 24; // includes our header, used to split file into chunks
 	}
 
 	public boolean transfer() {
@@ -70,6 +79,9 @@ public abstract class Transport {
 			System.err.println("Failed to connect");
 			return false;
 		}
+
+		System.out.println("bufferdp: " + bufferdp.getLength());
+
 		try {
 			TCPpacket last = TCPpacket.deserialize(bufferdp.getData());
 			channel.connect(bufferdp.getSocketAddress());
@@ -175,9 +187,9 @@ public abstract class Transport {
 			e.printStackTrace();
 		}
 		// set bufferdp
-		indp.setData(out.serialize());
 		while(reTransmissions < 16) {
 			try {
+				indp.setData(arraydp);
 				socket.receive(indp);
 				TCPpacket p = TCPpacket.deserialize(indp.getData());
 				updateTimeOut(p);
@@ -187,6 +199,7 @@ public abstract class Transport {
 				// resend
 				try {
 					System.out.println("Retransmitting");
+					indp.setData(out.serialize());
 					socket.send(indp); // should be set with data already
 					reTransmissions += 1;
 				} catch (Exception ex) {
