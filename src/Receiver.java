@@ -65,12 +65,18 @@ public class Receiver extends Transport {
 	}
 
 	private TCPpacket handlePacket(TCPpacket p) {
+		System.out.println("Seq: " + p.getSeq());
 		if (p == null) return null;
-		if (p.getAckNum() > currentWindow + maxDataSize * (buffer.length - 1))
+		if (p.getSeq() > currentWindow + maxDataSize * sws)
 			return null; // outside of window
+		if (p.getSeq() < currentAck) return null; // already read
 		if (p.isFin()) return p;
-		int bi = p.getAckNum() / (maxDataSize + currentAck);
-		System.out.println("bi: " + bi);
+		int bi = bufferIndex(p.getSeq());
+		System.out.println("HEY");
+		if (buffer[bi] == null) {
+			buffer[bi] = p;
+			System.out.println("Set bi=" + bi);
+		}
 
 		return null;
 	}
@@ -85,11 +91,9 @@ public class Receiver extends Transport {
 			System.exit(1);
 		}
 		try {
-			System.out.println("Reading All");
 			while (channel.receive(buf) != null) {
 				try {
 					buf.flip();
-					System.out.println("Read in " + buf.remaining() + " bytes");
 					p = TCPpacket.deserialize(buf.array());
 					if (p.isFin()) return p;
 					handlePacket(p);
@@ -114,27 +118,50 @@ public class Receiver extends Transport {
 		return null;
 	}
 
+	private int bufferIndex(int seq) {
+		System.out.println("bi: " + (seq / (maxDataSize + currentAck - currentWindow))); 
+		return seq / (maxDataSize + currentAck - currentWindow);
+	}
+
 	protected TCPpacket transferData() {
+		currentWindow = currentAck;
 		TCPpacket rcv = null;
 		try (FileOutputStream out = new FileOutputStream(filename, true)) {
 			TCPpacket lastAck = new TCPpacket();
 			TCPpacket fin = null;
 			lastAck.setAckNum(currentAck);
-			System.out.println("Starting transferData() in Receiver");
 			while (!(rcv = receiveData(lastAck)).isFin()) { // while not fin packet
-				System.out.println("Read unblocked");
 				fin = handlePacket(rcv);
 				if (fin != null) return fin;
-				//fin = readAll(); // proceses all until fin packet
-				//if (fin != null) return fin;
-				System.out.println("Blocking");
+				fin = readAll(); // proceses all until fin packet
+				if (fin != null) return fin;
+				// check for seqential
+				for (int bi = bufferIndex(currentAck); bi < buffer.length; bi++) {
+					if (buffer[bi] != null) {
+						currentAck += buffer[bi].getData().length;
+					}
+				}
+
+				System.out.printf("CAck (%d) CWin (%d)\n", currentAck, currentWindow);
+				if (currentAck > currentWindow + maxDataSize * 4) {
+					// slide window
+					currentWindow += currentAck - currentWindow;
+					// write to file
+					for (int i = 0; i < buffer.length; i++) {
+						out.write(buffer[i].getData());
+						buffer[i] = null;
+					}
+				}
+
+				lastAck.setAckNum(currentAck);
+				sendData(lastAck);
 			}
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 		}
 
-		 if (!rcv.isFin())
-		 	throw new IllegalStateException("Terminated before fin packet!");
+		if (!rcv.isFin())
+			throw new IllegalStateException("Terminated before fin packet!");
 
 		return rcv;
 	}

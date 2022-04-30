@@ -171,6 +171,10 @@ public class TCPpacket {
 		this.lengthFlags += flags; 
 	}
 
+	public byte[] copyData() {
+		return Arrays.copyOf(data, data.length);
+	}
+
 	public byte[] getData() {
 		return data;
 	}
