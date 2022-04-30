@@ -116,7 +116,7 @@ public class Sender extends Transport {
 			tmp.setSeq(currentSeq);
 			seqs[i] = currentSeq;
 			this.buffer[i] = tmp;
-			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data");
+			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
 		}
 		return false;
@@ -147,7 +147,7 @@ public class Sender extends Transport {
 		boolean found = false;
 		for(int i = 0; i<seqs.length; i++){
 			if (seqs[i]==ackNum){
-				moveWindow(i);
+				moveWindow(i, seqs);
 				found = true;
 			}
 		}
@@ -158,14 +158,16 @@ public class Sender extends Transport {
 		}
 	}
 
-	private void moveWindow(int toFree) {
+	private void moveWindow(int toFree, int[] seqs) {
 		int ind = 0;
 		for(int i = toFree; i<buffer.length;i++){
 			buffer[ind] = buffer[i];
+			seqs[ind] = seqs[i];
 			ind += 1;
 		}
 		while(ind < buffer.length){
 			buffer[ind] = null;
+			seqs[ind] = -1;
 			ind += 1;
 		}
 	}
