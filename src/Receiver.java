@@ -130,6 +130,7 @@ public class Receiver extends Transport {
 			TCPpacket lastAck = new TCPpacket();
 			TCPpacket fin = null;
 			lastAck.setAckNum(currentAck);
+			lastAck.setAck();
 			while (!(rcv = receiveData(lastAck)).isFin()) { // while not fin packet
 				fin = handlePacket(rcv);
 				if (fin != null) return fin;
