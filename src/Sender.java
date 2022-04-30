@@ -19,6 +19,7 @@ public class Sender extends Transport {
 	private byte[] buf;
 	private int bufn;
 	private int rightWindowSize;
+	private TCPpacket lastPacket;
 	// ArrayList buffer (protected)
 	// constructor fields (protected)
 	// Udp Socket (protected)
@@ -107,6 +108,7 @@ public class Sender extends Transport {
 			seqs[i] = currentSeq;
 			rightWindowSize = Math.max(currentSeq + rc, rightWindowSize);
 			this.buffer[i] = tmp;
+			lastPacket = tmp;
 			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
 		}
@@ -119,20 +121,9 @@ public class Sender extends Transport {
 				continue;
 			}
 			buffer[i].setCurrentTime();
-			if(buffer[i].getSeq() == 94121){
-				DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
-				dpBuf.setData(buffer[i].serialize());
-			}
 			sendData(buffer[i]);
 			DatagramPacket buf = new DatagramPacket(new byte[mtu], mtu);
 			buf.setData(buffer[i].serialize());
-			TCPpacket tmp;
-			try {
-				tmp = TCPpacket.deserialize(buf.getData());
-				printPacket(tmp, true);
-			} catch (SerialException e) {
-				e.printStackTrace();
-			}
 		}
 		TCPpacket incoming = receiveDataTransfer(buffer[0]);
 		return incoming;
@@ -183,7 +174,7 @@ public class Sender extends Transport {
 			}
 			endReached = false;
 			while(!endReached) {
-				TCPpacket p = receiveData(buffer[0]);
+				TCPpacket p = receiveData(lastPacket);
 				System.out.println(p.getAckNum() + " : " + rightWindowSize);
 				if (p.getAckNum() == rightWindowSize){
 					endReached = true;

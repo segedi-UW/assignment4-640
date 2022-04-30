@@ -197,6 +197,7 @@ public abstract class Transport {
 				// resend
 				try {
 					System.out.println("Retransmitting");
+					out.setCurrentTime();
 					indp.setData(out.serialize());
 					socket.send(indp); // should be set with data already
 					reTransmissions += 1;
@@ -246,6 +247,7 @@ public abstract class Transport {
 				// resend
 				try {
 					System.out.println("Retransmitting");
+					out.setCurrentTime();
 					indp.setData(out.serialize());
 					socket.send(indp); // should be set with data already
 					reTransmissions += 1;
