@@ -36,7 +36,6 @@ public abstract class Transport {
 	private DatagramPacket bufferdp;
 	private byte[] arraydp;
 	protected int currentAck;
-	protected int currentWindow;
 	protected DatagramSocket socket;
 	protected DatagramChannel channel;
 	protected boolean isSender;
@@ -98,7 +97,7 @@ public abstract class Transport {
 
 		TCPpacket fin = transferData();
 
-		// termConnection(fin);
+		termConnection(fin);
 		return true;
 	}
 
