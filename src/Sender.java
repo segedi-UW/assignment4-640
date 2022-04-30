@@ -19,7 +19,6 @@ public class Sender extends Transport {
 	private byte[] buf;
 	private int bufn;
 	private int nextBufSeq;
-	private int currentSeq;
 	private int currentSeqAcks;
 	// ArrayList buffer (protected)
 	// constructor fields (protected)
@@ -113,10 +112,21 @@ public class Sender extends Transport {
 			tmp = new TCPpacket();
 			tmp.setData(dataBuffer, 0, rc);
 			tmp.setAck();
-			tmp.setAckNum(1);
+			tmp.setAckNum(this.currentAck);
 			tmp.setSeq(currentSeq);
 			seqs[i] = currentSeq;
 			this.buffer[i] = tmp;
+			// if(rc == 155){
+			// 	DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
+			// 	dpBuf.setData(tmp.serialize());
+			// 	System.out.println(dpBuf.getLength());
+			// 	try {
+			// 		System.out.println(TCPpacket.deserialize(dpBuf.getData()).toString());
+			// 	} catch (SerialException e) {
+			// 		// TODO Auto-generated catch block
+			// 		e.printStackTrace();
+			// 	}
+			// }
 			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
 			currentSeqAcks = 0;
@@ -130,7 +140,20 @@ public class Sender extends Transport {
 				continue;
 			}
 			buffer[i].setCurrentTime();
+			if(buffer[i].getSeq() == 94121){
+				DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
+				dpBuf.setData(buffer[i].serialize());
+			}
 			sendData(buffer[i]);
+			DatagramPacket buf = new DatagramPacket(new byte[mtu], mtu);
+			buf.setData(buffer[i].serialize());
+			TCPpacket tmp;
+			try {
+				tmp = TCPpacket.deserialize(buf.getData());
+				printPacket(tmp, true);
+			} catch (SerialException e) {
+				e.printStackTrace();
+			}
 		}
 		TCPpacket incoming = receiveDataTransfer(buffer[0]);
 		return incoming;
@@ -175,7 +198,7 @@ public class Sender extends Transport {
 			while(!endReached){
 				endReached = fillBuffer(in, seqs);
 				TCPpacket incoming = sendBuffer();
-				// System.out.println("Incoming ACK: "+ incoming.getAckNum());
+				System.out.println("Incoming ACK: "+ incoming.getAckNum());
 				moveBufferWindow(seqs, incoming.getAckNum());
 				this.currentAck = incoming.getAckNum();
 			}
