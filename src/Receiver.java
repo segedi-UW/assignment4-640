@@ -64,24 +64,47 @@ public class Receiver extends Transport {
 		}
 	}
 
-	private TCPpacket handlePacket(TCPpacket p) {
+	/**
+	 * If the packet is not null and is within the sliding window
+	 * store it in the buffer. If that packet is the next expected,
+	 * send all of the buffer that is contiguous, and then send
+	 * an ack.
+	 */
+	private TCPpacket handlePacket(TCPpacket p, FileOutputStream out) throws IOException {
 		System.out.println("Seq: " + p.getSeq());
 		if (p == null) return null;
-		if (p.getSeq() > currentWindow + maxDataSize * sws)
+		if (p.getSeq() > currentAck + maxDataSize * sws)
 			return null; // outside of window
 		if (p.getSeq() < currentAck) return null; // already read
 		if (p.isFin()) return p;
 		int bi = bufferIndex(p.getSeq());
-		System.out.println("HEY");
-		if (buffer[bi] == null) {
+		if (buffer[bi] == null)
 			buffer[bi] = p;
-			System.out.println("Set bi=" + bi);
-		}
+		if (bi == 0)
+			handleWindow(out);
 
 		return null;
 	}
 
-	private TCPpacket readAll() {
+	/**
+	 * Send all of the buffer that is contiguous, reordering
+	 * the packets that are not contiguous. Increment currentAck.
+	 */
+	private void handleWindow(FileOutputStream out) throws IOException {
+		int c;
+		byte[] data;
+		// c will be the count of read
+		for (c = 0; c < buffer.length && buffer[c] != null; c++) {
+			data = buffer[c].getData();
+			out.write(data);
+			currentAck += data.length;
+		}
+		// reorder remaining bytes
+		for (int i = 0; c < buffer.length; i++, c++)
+			buffer[i] = buffer[c];
+	}
+
+	private TCPpacket readAll(FileOutputStream out) {
 		ByteBuffer buf = ByteBuffer.allocate(maxDataSize + TCPpacket.HEADERN);
 		TCPpacket p;
 		try {
@@ -96,7 +119,7 @@ public class Receiver extends Transport {
 					buf.flip();
 					p = TCPpacket.deserialize(buf.array());
 					if (p.isFin()) return p;
-					handlePacket(p);
+					handlePacket(p, out);
 				} catch (SerialException e) {
 					System.out.println("Bad Checksum");
 					continue;
@@ -119,39 +142,20 @@ public class Receiver extends Transport {
 	}
 
 	private int bufferIndex(int seq) {
-		return (seq - currentWindow) / (maxDataSize + currentAck - currentWindow);
+		return (seq - currentAck) / maxDataSize;
 	}
 
 	protected TCPpacket transferData() {
-		currentWindow = currentAck;
 		TCPpacket rcv = null;
 		try (FileOutputStream out = new FileOutputStream(filename, true)) {
 			TCPpacket lastAck = new TCPpacket();
 			TCPpacket fin = null;
 			lastAck.setAckNum(currentAck);
 			lastAck.setAck();
-			while (!(rcv = receiveData(lastAck)).isFin()) { // while not fin packet
-				fin = handlePacket(rcv);
-				if (fin != null) return fin;
-				fin = readAll(); // proceses all until fin packet
-				if (fin != null) return fin;
-				// check for seqential
-				for (int bi = bufferIndex(currentAck); bi < buffer.length; bi++) {
-					if (buffer[bi] != null) {
-						currentAck += buffer[bi].getData().length;
-					} else break;
-				}
-
-				System.out.printf("CAck (%d) CWin (%d)\n", currentAck, currentWindow);
-				if (currentAck > currentWindow + maxDataSize * 4) {
-					// slide window
-					currentWindow += currentAck - currentWindow;
-					// write to file
-					for (int i = 0; i < buffer.length; i++) {
-						out.write(buffer[i].getData());
-						buffer[i] = null;
-					}
-				}
+			while (!(rcv = receiveData(lastAck)).isFin()) {
+				fin = handlePacket(rcv, out);
+				if (fin == null)
+					fin = readAll(out);
 
 				lastAck.setAckNum(currentAck);
 				sendData(lastAck);

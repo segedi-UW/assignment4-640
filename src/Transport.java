@@ -36,7 +36,6 @@ public abstract class Transport {
 	private DatagramPacket bufferdp;
 	private byte[] arraydp;
 	protected int currentAck;
-	protected int currentWindow;
 	protected DatagramSocket socket;
 	protected DatagramChannel channel;
 	protected boolean isSender;
