@@ -80,8 +80,6 @@ public abstract class Transport {
 			return false;
 		}
 
-		System.out.println("bufferdp: " + bufferdp.getLength());
-
 		try {
 			TCPpacket last = TCPpacket.deserialize(bufferdp.getData());
 			channel.connect(bufferdp.getSocketAddress());
@@ -119,7 +117,7 @@ public abstract class Transport {
 		if(p.getDataLen() > 0) msg += " D ";
 		else msg += " - ";
 		msg += p.getSeq() + " " + p.getDataLen() + " " + p.getAckNum();
-		System.out.println(msg); 
+		//System.out.println(msg); 
 	}
 
 	private void updateTimeOut(TCPpacket p) {
@@ -127,7 +125,7 @@ public abstract class Transport {
 		long T = p.getTime();
 		long C = System.nanoTime();
 		if (S == 0){
-			System.out.println("Setting init");
+			//System.out.println("Setting init");
 			ERTT = (C - T);
 			EDEV = 0;
 			timeOut = (long) (2*ERTT);
@@ -182,7 +180,7 @@ public abstract class Transport {
 		try {
 			int to = getTimeOut();
 			socket.setSoTimeout(5000);
-			System.out.println("timeout: " + to);
+			//System.out.println("timeout: " + to);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
