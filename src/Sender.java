@@ -219,7 +219,6 @@ public class Sender extends Transport {
 		TCPpacket finFinal = new TCPpacket();
 		finFinal.setAck();
 		finFinal.setAckNum(2);
-		finFinal.setFin();
 		finFinal.setSeq(this.currentAck);
 		finFinal.setCurrentTime();
 		sendData(finFinal);
