@@ -116,7 +116,7 @@ public abstract class Transport {
 		if(p.getDataLen() > 0) msg += " D ";
 		else msg += " - ";
 		msg += p.getSeq() + " " + p.getDataLen() + " " + p.getAckNum();
-		//System.out.println(msg); 
+		System.out.println(msg); 
 	}
 
 	private void updateTimeOut(TCPpacket p) {
