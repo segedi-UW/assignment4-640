@@ -158,7 +158,8 @@ public class Sender extends Transport {
 				e.printStackTrace();
 			}
 		}
-		return receiveData(buffer[0]);
+		TCPpacket incoming = receiveDataTransfer(buffer[0]);
+		return incoming;
 	}
 
 	private void moveBufferWindow(int[] seqs, int ackNum) {

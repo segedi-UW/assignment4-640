@@ -2,7 +2,7 @@ JFLAGS = -g
 JC = javac
 rsargs=-p 4700 -s localhost -a 5000 -f test.txt -m 1500 -c 5
 rrargs=-p 5000 -m 1500 -c 5 -f intest.txt
-rsargs=-p 4700 -s 10.0.0.1 -a 5000 -f test.txt -m 1500 -c 5
+sargs=-p 4700 -s 10.0.0.1 -a 5000 -f test.txt -m 1500 -c 5
 
 
 .SUFFIXES: .java .class

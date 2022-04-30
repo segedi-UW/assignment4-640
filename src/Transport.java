@@ -217,6 +217,59 @@ public abstract class Transport {
 		return null;
 	}
 
+	protected TCPpacket receiveDataTransfer(TCPpacket out) {
+		return receiveDataTransfer(bufferdp, out);
+	}
+
+	public TCPpacket receiveDataTransfer(DatagramPacket indp, TCPpacket out) {
+		if (indp == null) throw new NullPointerException("buffer DatagramPacket is not initialized. Likely called receiveData(TCPpacket) before or in initConnection()");
+		int reTransmissions = 0;
+		try {
+			int to = getTimeOut();
+			socket.setSoTimeout(5000);
+			//System.out.println("timeout: " + to);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// set bufferdp
+		while(reTransmissions < 16) {
+			try {
+				indp.setData(arraydp);
+				socket.receive(indp);
+				TCPpacket p = TCPpacket.deserialize(indp.getData());
+				if(p.getAckNum() <= this.currentAck){ // discard packet
+					throw new IllegalArgumentException("Discarding packet due to bad ACK NUM: "+p.getAckNum());
+				}
+				updateTimeOut(p);
+				printPacket(p, false);
+				return p;
+			} catch (SocketTimeoutException e) {
+				// resend
+				try {
+					System.out.println("Retransmitting");
+					indp.setData(out.serialize());
+					socket.send(indp); // should be set with data already
+					reTransmissions += 1;
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				continue;
+			}
+			catch (IllegalArgumentException e) {
+				System.out.println(e.getMessage());
+			}
+			catch (Exception e) {
+				System.out.println(indp.getLength());
+				System.out.println(TCPpacket.toString(indp.getData()));
+				System.err.println(e.getMessage());
+				e.printStackTrace();
+			}
+		}
+		System.out.println("Tried Retransmitting 16 times");
+		System.exit(1);
+		return null;
+	}
+
 	/**
 	 * The connection should be initialized on return
 	 * if the init is successful, performing
