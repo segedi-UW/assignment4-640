@@ -12,7 +12,7 @@ public class Test {
 		TCPpacket d;
 		try {
 			d = TCPpacket.deserialize(ps);
-		} catch (ChecksumException e) {
+		} catch (SerialException e) {
 			System.err.println(e.getMessage());
 			return false;
 		}

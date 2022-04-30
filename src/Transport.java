@@ -74,7 +74,7 @@ public abstract class Transport {
 			TCPpacket last = TCPpacket.deserialize(bufferdp.getData());
 			channel.connect(bufferdp.getSocketAddress());
 			currentAck = last.getAckNum();
-		} catch (ChecksumException e) {
+		} catch (SerialException e) {
 			System.err.println("Bad initConnection() - no readable ack");
 			return false;
 		} catch (IOException e) {

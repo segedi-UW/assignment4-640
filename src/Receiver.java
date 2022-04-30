@@ -65,11 +65,12 @@ public class Receiver extends Transport {
 	}
 
 	private TCPpacket handlePacket(TCPpacket p) {
-		if (p.getAckNum() > currentAck + maxDataSize * (buffer.length - 1))
+		if (p == null) return null;
+		if (p.getAckNum() > currentWindow + maxDataSize * (buffer.length - 1))
 			return null; // outside of window
 		if (p.isFin()) return p;
 		int bi = p.getAckNum() / (maxDataSize + currentAck);
-
+		System.out.println("bi: " + bi);
 
 		return null;
 	}
@@ -77,7 +78,6 @@ public class Receiver extends Transport {
 	private TCPpacket readAll() {
 		ByteBuffer buf = ByteBuffer.allocate(maxDataSize + TCPpacket.HEADERN);
 		TCPpacket p;
-		int rc = 0;
 		try {
 			channel.configureBlocking(false);
 		} catch (IOException e) {
@@ -85,15 +85,19 @@ public class Receiver extends Transport {
 			System.exit(1);
 		}
 		try {
-			while ((rc = channel.read(buf)) > 0) {
+			while (channel.receive(buf) != null) {
 				try {
+					buf.flip();
+					System.out.println("Read in " + buf.remaining() + " bytes");
 					p = TCPpacket.deserialize(buf.array());
 					if (p.isFin()) return p;
 					handlePacket(p);
-				} catch (ChecksumException e) {
+				} catch (SerialException e) {
+					System.out.println("Bad Checksum");
 					continue;
+				} finally {
+					buf.clear();
 				}
-				buf.rewind();
 			}
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
@@ -106,8 +110,6 @@ public class Receiver extends Transport {
 				System.exit(1);
 			}
 		}
-		if (rc < 0)
-			throw new IllegalStateException("Socket was closed");
 		return null;
 	}
 
@@ -122,6 +124,7 @@ public class Receiver extends Transport {
 				if (fin != null) return fin;
 				fin = readAll(); // proceses all until fin packet
 				if (fin != null) return fin;
+				System.out.println("Blocking");
 			}
 		} catch (IOException e) {
 			System.err.println("Failed to write to file: " + e.getMessage());

@@ -58,8 +58,10 @@ public class TCPpacket {
 	 * Length | S | F | A [4]
 	 * All zeroes | Checksum (split evenly) [4]
 	 */
-	public static TCPpacket deserialize(byte[] src) throws ChecksumException {
+	public static TCPpacket deserialize(byte[] src) throws SerialException {
 		TCPpacket p = new TCPpacket();
+		if (src.length < HEADERN)
+			throw new SerialException("Cannot deserialize, src is too small to be a TCPpacket");
 		// no mutations in original array this way
 		ByteBuffer buf = ByteBuffer.wrap(Arrays.copyOf(src, src.length));
 		p.sequenceNumber = buf.getInt();
@@ -75,6 +77,10 @@ public class TCPpacket {
 		buf.putInt(0);
 
 		p.data = new byte[p.getDataLen()];
+		if (buf.remaining() < p.getDataLen()) {
+			System.err.println("Packet read in is " + src.length + " bytes, but is expected to be " + (HEADERN + p.getDataLen()) + " bytes");
+			throw new SerialException("Packet is incorrect size");
+		}
 		buf.get(p.data, 0, p.getDataLen());
 
 		// verify the checksum

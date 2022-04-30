@@ -1,4 +1,4 @@
-public class ChecksumException extends Exception {
+public class ChecksumException extends SerialException {
 	public ChecksumException(String msg) {
 		super(msg);
 	}
