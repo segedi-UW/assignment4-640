@@ -88,7 +88,7 @@ public abstract class Transport {
 
 		TCPpacket fin = transferData();
 
-		termConnection(fin);
+		// termConnection(fin);
 		return true;
 	}
 
@@ -141,7 +141,7 @@ public abstract class Transport {
 			socket.send(indp);
 			printPacket(p, true);
 		} catch (IOException e) {
-			System.err.println(e.getMessage());
+			e.printStackTrace();
 			System.exit(1); // FIXME may change to return boolean etc
 		}
 	}
@@ -154,7 +154,6 @@ public abstract class Transport {
 		if (bufferdp == null)
 			throw new NullPointerException("Channel is not init");
 		sendData(bufferdp, p);
-		printPacket(p, true);
 	}
 
 	/**

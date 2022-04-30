@@ -116,6 +116,7 @@ public class Sender extends Transport {
 			tmp.setSeq(currentSeq);
 			seqs[i] = currentSeq;
 			this.buffer[i] = tmp;
+			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data");
 			currentSeq += rc;
 		}
 		return false;
@@ -126,11 +127,10 @@ public class Sender extends Transport {
 			if(buffer[i] == null){
 				continue;
 			}
-			DatagramPacket bufdp = new DatagramPacket(new byte[mtu], mtu, addr, rp);
-			sendData(bufdp, buffer[i]);
+			buffer[i].setCurrentTime();
+			sendData(buffer[i]);
 		}
-		DatagramPacket bufdp = new DatagramPacket(new byte[mtu], mtu, addr, rp);
-		return receiveData(bufdp, buffer[0]);
+		return receiveData(buffer[0]);
 	}
 
 	private void moveBufferWindow(int[] seqs, int ackNum) {
@@ -155,6 +155,7 @@ public class Sender extends Transport {
 
 	@Override
 	protected TCPpacket transferData() {
+		System.out.println("Starting Transfer");
 		int currentSeq = 1;
 		boolean endReached = false;
 		int[] seqs = new int[buffer.length];

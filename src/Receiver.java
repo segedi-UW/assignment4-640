@@ -126,14 +126,26 @@ public class Receiver extends Transport {
 				if (fin != null) return fin;
 				System.out.println("Blocking");
 			}
-		} catch (IOException e) {
-			System.err.println("Failed to write to file: " + e.getMessage());
 		}
+		// TCPpacket rcv = null;
+		// try (FileOutputStream out = new FileOutputStream(filename, true)) {
+		// 	TCPpacket lastAck = new TCPpacket();
+		// 	TCPpacket fin = null;
+		// 	lastAck.setAckNum(currentAck);
+		// 	while (!(rcv = receiveData(lastAck)).isFin()) { // while not fin packet
+		// 		fin = handlePacket(rcv);
+		// 		if (fin != null) return fin;
+		// 		fin = readAll(); // proceses all until fin packet
+		// 		if (fin != null) return fin;
+		// 	}
+		// } catch (IOException e) {
+		// 	System.err.println("Failed to write to file: " + e.getMessage());
+		// }
 
-		if (!rcv.isFin())
-			throw new IllegalStateException("Terminated before fin packet!");
+		// if (!rcv.isFin())
+		// 	throw new IllegalStateException("Terminated before fin packet!");
 
-		return rcv;
+		// return rcv;
 	}
 
 	@Override
