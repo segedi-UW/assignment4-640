@@ -117,6 +117,16 @@ public class Sender extends Transport {
 			tmp.setSeq(currentSeq);
 			seqs[i] = currentSeq;
 			this.buffer[i] = tmp;
+			if(rc == 155){
+				DatagramPacket dpBuf = new DatagramPacket(new byte[mtu], mtu);
+				dpBuf.setData(tmp.serialize());
+				try {
+					System.out.println(TCPpacket.deserialize(dpBuf.getData()).toString());
+				} catch (SerialException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
 		}
@@ -196,6 +206,7 @@ public class Sender extends Transport {
 
 	@Override
 	protected void termConnection(TCPpacket finPacket) { //TODO: Need to add time wait state
+		System.out.println("Starting Termination");
 		TCPpacket finInit = new TCPpacket();
 		finInit.setAck();
 		finInit.setFin();
