@@ -173,8 +173,9 @@ public class Sender extends Transport {
 			while(!endReached){
 				endReached = fillBuffer(in, currentSeq, seqs);
 				TCPpacket incoming = sendBuffer();
-				this.currentAck = incoming.getSeq() + 1;
+				System.out.println("Incoming ACK: "+ incoming.getAckNum());
 				moveBufferWindow(seqs, incoming.getAckNum());
+				this.currentAck = incoming.getAckNum();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
