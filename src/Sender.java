@@ -173,8 +173,9 @@ public class Sender extends Transport {
 			while(!endReached){
 				endReached = fillBuffer(in, currentSeq, seqs);
 				TCPpacket incoming = sendBuffer();
-				this.currentAck = incoming.getSeq() + 1;
+				System.out.println("Incoming ACK: "+ incoming.getAckNum());
 				moveBufferWindow(seqs, incoming.getAckNum());
+				this.currentAck = incoming.getAckNum();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -184,7 +185,30 @@ public class Sender extends Transport {
 	}
 
 	@Override
-	protected void termConnection(TCPpacket finPacket) {
-		// FIXME
+	protected void termConnection(TCPpacket finPacket) { //TODO: Need to add time wait state
+		TCPpacket finInit = new TCPpacket();
+		finInit.setAck();
+		finInit.setFin();
+		finInit.setSeq(this.currentAck);
+		finInit.setAckNum(1);
+		finInit.setCurrentTime();
+		sendData(finInit);
+
+
+		TCPpacket prev = receiveData(finInit);
+		this.currentAck = prev.getAckNum();
+		if(!prev.isFin() || !prev.isAck()){
+			System.out.println("Got bad fin Packet back from reciever");
+			System.exit(1);
+		}
+
+		TCPpacket finFinal = new TCPpacket();
+		finFinal.setAck();
+		finFinal.setAckNum(2);
+		finFinal.setFin();
+		finFinal.setSeq(this.currentAck);
+		finFinal.setCurrentTime();
+		sendData(finFinal);
+		System.out.println("Connection Terminated on Sender");
 	}
 }
