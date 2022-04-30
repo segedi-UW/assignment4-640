@@ -21,6 +21,7 @@ public class Sender extends Transport {
 	private int nextBufSeq;
 	private int currentSeq;
 	private int currentSeqAcks;
+	private int rightWindowSize;
 	// ArrayList buffer (protected)
 	// constructor fields (protected)
 	// Udp Socket (protected)
@@ -118,6 +119,7 @@ public class Sender extends Transport {
 			tmp.setAckNum(1);
 			tmp.setSeq(currentSeq);
 			seqs[i] = currentSeq;
+			rightWindowSize = Math.max(currentSeq + rc, rightWindowSize);
 			this.buffer[i] = tmp;
 			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
@@ -181,6 +183,15 @@ public class Sender extends Transport {
 				moveBufferWindow(seqs, incoming.getAckNum());
 				this.currentAck = incoming.getAckNum();
 			}
+			endReached = false;
+			while(!endReached) {
+				TCPpacket p = receiveData(buffer[0]);
+				System.out.println(p.getAckNum() + " : " + rightWindowSize);
+				if (p.getAckNum() == rightWindowSize){
+					endReached = true;
+					currentAck = p.getAckNum();
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -200,7 +211,7 @@ public class Sender extends Transport {
 		sendData(finInit);
 
 
-		TCPpacket prev = receiveData(finInit);
+		TCPpacket prev = receiveDataTransfer(finInit);
 		this.currentAck = prev.getAckNum();
 		if(!prev.isFin() || !prev.isAck()){
 			System.out.println("Got bad fin Packet back from reciever");
