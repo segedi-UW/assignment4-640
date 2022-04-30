@@ -43,19 +43,18 @@ public class Receiver extends Transport {
 			TCPpacket initRsp = new TCPpacket();
 			initRsp.setSyn(); 
 			initRsp.setAck();
-			initRsp.setSeq(0);
+			initRsp.setSeq(currentSeq);
 			initRsp.setAckNum(init.getSeq()+1);
 			initRsp.setTime(init.getTime());
 
 			sendData(bufdp, initRsp);
-			// System.out.println("Sent");
+			currentSeq++;
 
 			TCPpacket rspAck = receiveData(bufdp, initRsp);
 			if (!rspAck.isAck() && rspAck.getAckNum() != initRsp.getSeq()+1) {
 				System.out.printf("Ack Expected (%d) != Actual (%d)\n", initRsp.getSeq()+1, rspAck.getAckNum());
 				return null;
 			}
-			// System.out.println("Received");
 			System.out.println("Connection Initialized");
 			return bufdp;
 		} catch (Exception e) {
@@ -160,8 +159,28 @@ public class Receiver extends Transport {
 		return rcv;
 	}
 
+	/*
+	 * S				R
+	 * |Fin seq=x ->	| // passed as param
+	 * |	  <- ACK x+1| S knows that R confirmed FIN
+	 * |	<- FIN seq=y| 
+	 * |ACK y+1 ->		| R closes connection on ack or 2 mins, exits, S sends and exits
+	 * |				|
+	 */
 	@Override
-	protected void termConnection(TCPpacket finPacket) {
-		
+	protected void termConnection(TCPpacket rcfFin) {
+		rcfFin.setAckNum(rcfFin.getSeq()+1);
+		rcfFin.setFin();
+		rcfFin.setSeq(currentSeq);
+		sendData(rcfFin); // no rcv ack for this
+		currentSeq++;
+		try {
+			TCPpacket rsp = null;
+			do {
+				rsp = receiveData(rcfFin);
+			} while (rsp != null && !rsp.isAck() && currentSeq == rcfFin.getAckNum());
+		} catch (IllegalStateException e) {
+			// return normally
+		}
 	}
 }

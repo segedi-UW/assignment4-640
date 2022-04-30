@@ -36,6 +36,7 @@ public abstract class Transport {
 	private DatagramPacket bufferdp;
 	private byte[] arraydp;
 	protected int currentAck;
+	protected int currentSeq;
 	protected DatagramSocket socket;
 	protected DatagramChannel channel;
 	protected InetAddress addr;
@@ -211,8 +212,7 @@ public abstract class Transport {
 			}
 		}
 		System.out.println("Tried Retransmitting 16 times");
-		System.exit(1);
-		return null;
+		throw new IllegalStateException("Lost Connection");
 	}
 
 	protected TCPpacket receiveDataTransfer(TCPpacket out) {
