@@ -109,7 +109,6 @@ public class Sender extends Transport {
 			}
 			int rc = in.read(dataBuffer);
 			if(rc == -1){
-				System.out.println("End REACHED");
 				return true;
 			}
 			if(rc != maxDataSize){
