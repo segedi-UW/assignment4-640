@@ -129,6 +129,16 @@ public class Sender extends Transport {
 			}
 			buffer[i].setCurrentTime();
 			sendData(buffer[i]);
+			DatagramPacket buf = new DatagramPacket(new byte[mtu], mtu);
+			buf.setData(buffer[i].serialize());
+			TCPpacket tmp;
+			try {
+				tmp = TCPpacket.deserialize(buf.getData());
+				printPacket(tmp, true);
+			} catch (SerialException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		return receiveData(buffer[0]);
 	}
