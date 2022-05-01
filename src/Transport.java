@@ -179,7 +179,7 @@ public abstract class Transport {
 		int reTransmissions = 0;
 		try {
 			int to = getTimeOut();
-			socket.setSoTimeout(5000);
+			socket.setSoTimeout(getTimeOut());
 			System.out.println("timeout: " + to);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -226,7 +226,7 @@ public abstract class Transport {
 		int reTransmissions = 0;
 		try {
 			int to = getTimeOut();
-			socket.setSoTimeout(5000);
+			socket.setSoTimeout(getTimeOut());
 			//System.out.println("timeout: " + to);
 		} catch (Exception e) {
 			e.printStackTrace();
