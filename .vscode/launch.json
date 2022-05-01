@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Receiver",
+            "request": "launch",
+            "mainClass": "TCPend",
+            "args": "-p 5000 -m 1500 -c 5 -f intest.txt",
+            "projectName": "assignment4-640_c92f525f"
+        },
+        {
+            "type": "java",
+            "name": "Launch Sender",
+            "request": "launch",
+            "mainClass": "TCPend",
+            "args": "-p 4700 -s localhost -a 5000 -f test.txt -m 1500 -c 5",
+            "projectName": "assignment4-640_c92f525f"
+        },
+    ]
+}
