@@ -93,7 +93,7 @@ public abstract class Transport {
 			return false;
 		} catch (IOException e) {
 			System.err.println("Failed to connect DatagramChannel() " + e.getMessage());
-			System.exit(1);
+			return false;
 		}
 
 		// Set these just in case
@@ -103,12 +103,21 @@ public abstract class Transport {
 		TCPpacket fin = transferData();
 
 		termConnection(fin);
-		System.out.println("Data Transferred: "+ this.dataTransferred);
-		System.out.println("Packets sent: " + this.packetsTransferred);
-		System.out.println("Out of Sequence Packets: "+ outOfSequencePackets);
-		System.out.println("Bad Checksum Packets: "+ incorrectChecksum);
-		System.out.println("Number of Retransmissions: "+ numRetransmissions);
-		System.out.println("Duplicate Acknowledgements: "+ dupAcks);
+		String msg = "Data Transferred: " + this.dataTransferred;
+		msg += "Packets sent: " + this.packetsTransferred;
+		msg += "Out of Sequence Packets: " + outOfSequencePackets;
+		msg += "Bad Checksum Packets: " + incorrectChecksum;
+		msg += "Number of Retransmissions: " + numRetransmissions;
+		msg += "Duplicate Acknowledgements: " + dupAcks;
+		System.out.println(msg);
+
+		try {
+			if (channel.isOpen())
+				channel.close();
+		} catch (IOException e) {
+			System.err.println("Failed to close channel gracefully. Leaving it up to the OS");
+		}
+
 		return true;
 	}
 
