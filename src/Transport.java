@@ -105,11 +105,11 @@ public abstract class Transport {
 
 		termConnection(fin);
 		String msg = "Data Transferred: " + this.dataTransferred;
-		msg += "Packets sent: " + this.packetsTransferred;
-		msg += "Out of Sequence Packets: " + outOfSequencePackets;
-		msg += "Bad Checksum Packets: " + incorrectChecksum;
-		msg += "Number of Retransmissions: " + numRetransmissions;
-		msg += "Duplicate Acknowledgements: " + dupAcks;
+		msg += "\nPackets sent: " + this.packetsTransferred;
+		msg += "\nOut of Sequence Packets: " + outOfSequencePackets;
+		msg += "\nBad Checksum Packets: " + incorrectChecksum;
+		msg += "\nNumber of Retransmissions: " + numRetransmissions;
+		msg += "\nDuplicate Acknowledgements: " + dupAcks;
 		System.out.println(msg);
 
 		try {
