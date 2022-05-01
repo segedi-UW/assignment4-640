@@ -1,1 +1,9 @@
 *.txt
+*.sh
+*.tgz
+*.out
+*.py
+pox*
+arp_cache
+ip_config
+topos
