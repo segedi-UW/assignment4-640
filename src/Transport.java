@@ -43,7 +43,12 @@ public abstract class Transport {
 	protected long timeOut = 5000;
 	protected double ERTT;	// timeout var
 	protected double EDEV;	// timeout var
+	protected int dataTransferred = 0;
 	protected int packetsTransferred = 0;
+	protected int outOfSequencePackets = 0;
+	protected int incorrectChecksum = 0;
+	protected int numRetransmissions = 0;
+	protected int dupAcks = 0;
 
 	protected Transport(int lp, int rp, String filename, int mtu, int sws) throws SocketException {
 		this.lp = lp;
@@ -98,6 +103,12 @@ public abstract class Transport {
 		TCPpacket fin = transferData();
 
 		termConnection(fin);
+		System.out.println("Data Transferred: "+ this.dataTransferred);
+		System.out.println("Packets sent: " + this.packetsTransferred);
+		System.out.println("Out of Sequence Packets: "+ outOfSequencePackets);
+		System.out.println("Bad Checksum Packets: "+ incorrectChecksum);
+		System.out.println("Number of Retransmissions: "+ numRetransmissions);
+		System.out.println("Duplicate Acknowledgements: "+ dupAcks);
 		return true;
 	}
 
@@ -190,6 +201,9 @@ public abstract class Transport {
 				indp.setData(arraydp);
 				socket.receive(indp);
 				TCPpacket p = TCPpacket.deserialize(indp.getData());
+				if(p.getAckNum() == this.currentAck){
+					dupAcks += 1;
+				}
 				updateTimeOut(p);
 				printPacket(p, false);
 				return p;
@@ -201,10 +215,15 @@ public abstract class Transport {
 					indp.setData(out.serialize());
 					socket.send(indp); // should be set with data already
 					reTransmissions += 1;
+					numRetransmissions += 1;
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 				continue;
+			}
+			catch (ChecksumException e) {
+				incorrectChecksum += 1;
+				System.out.println("Discarding Packet because of bad checksum");
 			}
 			catch (Exception e) {
 				System.out.println(indp.getLength());
@@ -238,6 +257,11 @@ public abstract class Transport {
 				socket.receive(indp);
 				TCPpacket p = TCPpacket.deserialize(indp.getData());
 				if(p.getAckNum() <= this.currentAck){ // discard packet
+					if(p.getAckNum() == this.currentAck){
+						dupAcks += 1;
+					}
+					else
+						outOfSequencePackets += 1;
 					throw new IllegalArgumentException("Discarding packet due to bad ACK NUM: "+p.getAckNum());
 				}
 				updateTimeOut(p);
@@ -251,6 +275,7 @@ public abstract class Transport {
 					indp.setData(out.serialize());
 					socket.send(indp); // should be set with data already
 					reTransmissions += 1;
+					numRetransmissions += 1;
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -258,6 +283,9 @@ public abstract class Transport {
 			}
 			catch (IllegalArgumentException e) {
 				System.out.println(e.getMessage());
+			}catch (ChecksumException e) {
+				incorrectChecksum += 1;
+				System.out.println("Discarding Packet because of bad checksum");
 			}
 			catch (Exception e) {
 				System.out.println(indp.getLength());

@@ -111,6 +111,7 @@ public class Sender extends Transport {
 			lastPacket = tmp;
 			// System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
+			dataTransferred += rc;
 		}
 		return false;
 	}

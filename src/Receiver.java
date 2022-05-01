@@ -96,6 +96,7 @@ public class Receiver extends Transport {
 			data = buffer[c].getData();
 			out.write(data);
 			currentAck += data.length;
+			dataTransferred += data.length;
 			currentAckTimestamp = buffer[c].getTime();
 			buffer[c] = null;
 		}
