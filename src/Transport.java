@@ -250,6 +250,7 @@ public abstract class Transport {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		int duplicateAcks = 0;
 		// set bufferdp
 		while(reTransmissions < 16) {
 			try {
@@ -259,6 +260,9 @@ public abstract class Transport {
 				if(p.getAckNum() <= this.currentAck){ // discard packet
 					if(p.getAckNum() == this.currentAck){
 						dupAcks += 1;
+						duplicateAcks += 1;
+						if(duplicateAcks%3 == 0) // Fast Retransmit with 3 duplicate ACKs
+							throw new SocketTimeoutException();
 					}
 					else
 						outOfSequencePackets += 1;
