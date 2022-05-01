@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.nio.channels.DatagramChannel;
 import java.net.InetSocketAddress;
+import java.net.PortUnreachableException;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
@@ -67,8 +68,8 @@ public abstract class Transport {
 				this.channel.setOption(StandardSocketOptions.SO_SNDBUF, mtu * 10);
 			if (this.socket.getReceiveBufferSize() < mtu * 10)
 				this.channel.setOption(StandardSocketOptions.SO_RCVBUF, mtu * 10);
-			System.out.println("snd buffer size: " + this.socket.getSendBufferSize());
-			System.out.println("rcv buffer size: " + this.socket.getReceiveBufferSize());
+			// System.out.println("snd buffer size: " + this.socket.getSendBufferSize());
+			// System.out.println("rcv buffer size: " + this.socket.getReceiveBufferSize());
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);
@@ -153,7 +154,7 @@ public abstract class Transport {
 		return (int) this.timeOut;
 	}
 
-	protected void sendData(DatagramPacket indp, TCPpacket p) {
+	protected boolean sendData(DatagramPacket indp, TCPpacket p) {
 		if (indp == null)
 			throw new NullPointerException("buffer DatagramPacket is not initialized. Likely called sendData(TCPpacket) before or in initConnection()");
 		indp.setData(p.serialize());
@@ -161,9 +162,13 @@ public abstract class Transport {
 
 			socket.send(indp);
 			printPacket(p, true);
-		} catch (IOException e) {
+			return true;
+		} catch (PortUnreachableException e) {
+			return false;
+		}catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1); // FIXME may change to return boolean etc
+			return false;
 		}
 	}
 
@@ -171,10 +176,10 @@ public abstract class Transport {
 	 * NOTE Should only be called after initConnection returns
 	 *
 	 */
-	protected void sendData(TCPpacket p) {
+	protected boolean sendData(TCPpacket p) {
 		if (bufferdp == null)
 			throw new NullPointerException("Channel is not init");
-		sendData(bufferdp, p);
+		return sendData(bufferdp, p);
 	}
 
 	/**
@@ -191,7 +196,7 @@ public abstract class Transport {
 		try {
 			int to = getTimeOut();
 			socket.setSoTimeout(getTimeOut());
-			System.out.println("timeout: " + to);
+			// System.out.println("timeout: " + to);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -210,7 +215,7 @@ public abstract class Transport {
 			} catch (SocketTimeoutException e) {
 				// resend
 				try {
-					System.out.println("Retransmitting");
+					// System.out.println("Retransmitting");
 					out.setCurrentTime();
 					indp.setData(out.serialize());
 					socket.send(indp); // should be set with data already
@@ -274,7 +279,7 @@ public abstract class Transport {
 			} catch (SocketTimeoutException e) {
 				// resend
 				try {
-					System.out.println("Retransmitting");
+					// System.out.println("Retransmitting");
 					out.setCurrentTime();
 					indp.setData(out.serialize());
 					socket.send(indp); // should be set with data already
@@ -286,10 +291,10 @@ public abstract class Transport {
 				continue;
 			}
 			catch (IllegalArgumentException e) {
-				System.out.println(e.getMessage());
+				// System.out.println(e.getMessage());
 			}catch (ChecksumException e) {
 				incorrectChecksum += 1;
-				System.out.println("Discarding Packet because of bad checksum");
+				// System.out.println("Discarding Packet because of bad checksum");
 			}
 			catch (Exception e) {
 				System.out.println(indp.getLength());

@@ -55,7 +55,7 @@ public class Receiver extends Transport {
 				System.out.printf("Ack Expected (%d) != Actual (%d)\n", initRsp.getSeq()+1, rspAck.getAckNum());
 				return null;
 			}
-			System.out.println("Connection Initialized");
+			// System.out.println("Connection Initialized");
 			return bufdp;
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -64,9 +64,9 @@ public class Sender extends Transport {
 
 			sendData(bufdp, init);
 
-			System.out.println("Reading");
+			// System.out.println("Reading");
 			TCPpacket initRsp = receiveData(bufdp, init);
-			System.out.println("Received packet");
+			// System.out.println("Received packet");
 			if (!initRsp.isSyn() || !initRsp.isAck()) {
 				System.err.println("Expected SYN and ACK to be set");
 				return null;
@@ -80,7 +80,7 @@ public class Sender extends Transport {
 			rspAck.setAckNum(initRsp.getSeq()+1);
 			rspAck.setCurrentTime();
 			sendData(bufdp, rspAck);
-			System.out.println("Sent Acknowledgement");
+			// System.out.println("Sent Acknowledgement");
 			return bufdp;
 		}
 		catch (Exception e){
@@ -161,7 +161,7 @@ public class Sender extends Transport {
 
 	@Override
 	protected TCPpacket transferData() {
-		System.out.println("Starting Transfer");
+		// System.out.println("Starting Transfer");
 		currentSeq = 1;
 		boolean endReached = false;
 		int[] seqs = new int[buffer.length];
@@ -169,14 +169,14 @@ public class Sender extends Transport {
 			while(!endReached){
 				endReached = fillBuffer(in, seqs);
 				TCPpacket incoming = sendBuffer();
-				System.out.println("Incoming ACK: "+ incoming.getAckNum());
+				// System.out.println("Incoming ACK: "+ incoming.getAckNum());
 				moveBufferWindow(seqs, incoming.getAckNum());
 				this.currentAck = incoming.getAckNum();
 			}
 			endReached = false;
 			while(!endReached) {
 				TCPpacket p = receiveData(lastPacket);
-				System.out.println(p.getAckNum() + " : " + rightWindowSize);
+				// System.out.println(p.getAckNum() + " : " + rightWindowSize);
 				if (p.getAckNum() == rightWindowSize){
 					endReached = true;
 					currentAck = p.getAckNum();
@@ -191,7 +191,7 @@ public class Sender extends Transport {
 
 	@Override
 	protected void termConnection(TCPpacket finPacket) { //TODO: Need to add time wait state
-		System.out.println("Starting Termination");
+		// System.out.println("Starting Termination");
 		TCPpacket finInit = new TCPpacket();
 		finInit.setAck();
 		finInit.setFin();
@@ -213,7 +213,14 @@ public class Sender extends Transport {
 		finFinal.setAckNum(2);
 		finFinal.setSeq(this.currentAck);
 		finFinal.setCurrentTime();
-		sendData(finFinal);
-		System.out.println("Connection Terminated on Sender");
+		while(sendData(finFinal)){
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		// System.out.println("Connection Terminated on Sender");
 	}
 }
