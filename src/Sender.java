@@ -109,7 +109,7 @@ public class Sender extends Transport {
 			rightWindowSize = Math.max(currentSeq + rc, rightWindowSize);
 			this.buffer[i] = tmp;
 			lastPacket = tmp;
-			System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
+			// System.out.println("Buffer "+i+" filled with "+ rc+" bytes of data with Seq: "+ currentSeq);
 			currentSeq += rc;
 		}
 		return false;

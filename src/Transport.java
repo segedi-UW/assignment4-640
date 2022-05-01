@@ -125,12 +125,12 @@ public abstract class Transport {
 		long C = System.nanoTime();
 		if (S == 0){
 			//System.out.println("Setting init");
-			ERTT = (C - T);
+			ERTT = (C - T) / 1000000;
 			EDEV = 0;
 			timeOut = (long) (2*ERTT);
 		}
 		else{
-			double SRTT = (C - T);
+			double SRTT = (C - T) / 1000000;
 			double SDEV = Math.abs(SRTT - ERTT);
 			ERTT = a*ERTT + (1-a)*SRTT;
 			EDEV = b*EDEV + (1-b)*SDEV;
